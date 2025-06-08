@@ -6,7 +6,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -14,13 +13,24 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Bus {
-  id  Int @id @default(autoincrement())
-  label String
-  latitude  Float
-  longitude Float
-  tripID  String
-  routeID String
-  routeShortName  String
-  routeLongName String
+model User {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  email String
+  hash  String
+
+  firstName String?
+  lastName  String?
+}
+
+model Bookmark {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  title       String
+  description String?
+  link        String
 }
