@@ -8,6 +8,6 @@ export class FeedbackController {
 
     @Post()
     create(@Body() dto: FeedbackDto) {
-        return this.service.create()
+        return this.service.create(dto)
     }
 }
