@@ -10,7 +10,7 @@ export class FeedbackDto {
     @Min(1)
     @Max(5)
     @IsNotEmpty()
-    stars: number
+    rating: number
 
     @IsEmail()
     @IsOptional()
