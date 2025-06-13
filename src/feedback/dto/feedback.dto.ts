@@ -1,4 +1,5 @@
 import { IsEmail, IsInt, IsNotEmpty, IsOptional, IsString, Max, Min } from "class-validator"
+import { Type } from "class-transformer"
 
 export class FeedbackDto {
 
@@ -10,6 +11,7 @@ export class FeedbackDto {
     @Min(1)
     @Max(5)
     @IsNotEmpty()
+    @Type(() => Number)
     rating: number
 
     @IsEmail()
