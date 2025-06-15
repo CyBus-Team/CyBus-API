@@ -1,7 +1,7 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { FeedbackDto } from './dto';
-import { PrismaClientKnownRequestError } from 'generated/prisma/runtime/library';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 @Injectable()
 export class FeedbackService {
