@@ -64,13 +64,19 @@ describe('App E2E Tests', () => {
         return pactum.spec().post('/auth/signin').expectStatus(400)
       })
       it('should sign in', () => {
-        return pactum.spec().post('/auth/signin').withBody(dto).expectStatus(200)
+        return pactum.spec().post('/auth/signin').withBody(dto).expectStatus(200).stores('userAt', 'access_token')
       })
     })
   })
 
   describe('Users', () => {
-    describe('Get Me', () => { })
+    describe('Get Me', () => {
+      it('should get current user', () => {
+        return pactum.spec().get('/users/me').withHeaders({
+          Authorization: 'Bearer $S{userAt}'
+        }).expectStatus(200)
+      })
+    })
 
     describe('Edit user', () => { })
   })
