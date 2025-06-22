@@ -2,7 +2,7 @@ import { Body, Controller, HttpCode, HttpStatus, Post, Req } from "@nestjs/commo
 import { AuthService } from "./auth.service"
 import { AuthDto } from "./dto"
 
-@Controller()
+@Controller('auth')
 export class AuthController {
     constructor(private authService: AuthService) { }
 

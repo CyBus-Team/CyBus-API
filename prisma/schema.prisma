@@ -21,6 +21,8 @@ model Feedback {
   email   String?
   message String
   rating  Int
+
+  @@map("feedbacks")
 }
 
 model User {
