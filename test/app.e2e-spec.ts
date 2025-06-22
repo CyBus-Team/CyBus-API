@@ -5,6 +5,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import * as pactum from 'pactum'
 import { AuthDto } from 'src/auth/dto';
 import { FeedbackDto } from 'src/feedback/dto';
+import { EditUserDto } from 'src/user/dto';
 
 describe('App E2E Tests', () => {
   let app: INestApplication
@@ -75,6 +76,16 @@ describe('App E2E Tests', () => {
         return pactum.spec().get('/users/me').withHeaders({
           Authorization: 'Bearer $S{userAt}'
         }).expectStatus(200)
+      })
+
+      it('should edit user', () => {
+        const dto: EditUserDto = {
+          firstName: 'Test',
+          email: 'test@test.com'
+        }
+        return pactum.spec().patch('/users').withHeaders({
+          Authorization: 'Bearer $S{userAt}'
+        }).withBody(dto).expectStatus(200)
       })
     })
 
