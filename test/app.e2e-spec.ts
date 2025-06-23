@@ -23,11 +23,11 @@ describe('App E2E Tests', () => {
       })
     )
     await app.init()
-    await app.listen(3333)
+    await app.listen(3334)
 
     prisma = app.get(PrismaService)
     await prisma.cleanDb()
-    pactum.request.setBaseUrl('http://localhost:3333')
+    pactum.request.setBaseUrl('http://localhost:3334')
   })
 
   afterAll(() => {
@@ -77,10 +77,11 @@ describe('App E2E Tests', () => {
           Authorization: 'Bearer $S{userAt}'
         }).expectStatus(200)
       })
+    })
 
+    describe('Edit user', () => {
       it('should edit user', () => {
         const dto: EditUserDto = {
-          firstName: 'Test',
           email: 'test@test.com'
         }
         return pactum.spec().patch('/users').withHeaders({
@@ -88,8 +89,6 @@ describe('App E2E Tests', () => {
         }).withBody(dto).expectStatus(200)
       })
     })
-
-    describe('Edit user', () => { })
   })
 
   describe('Bookmarks', () => {
