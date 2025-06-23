@@ -6,6 +6,7 @@ import * as pactum from 'pactum'
 import { AuthDto } from 'src/auth/dto';
 import { FeedbackDto } from 'src/feedback/dto';
 import { EditUserDto } from 'src/user/dto';
+import { CreateBookmarkDto, EditBookmarkDto } from 'src/bookmark/dto';
 
 describe('App E2E Tests', () => {
   let app: INestApplication
@@ -82,56 +83,108 @@ describe('App E2E Tests', () => {
     describe('Edit user', () => {
       it('should edit user', () => {
         const dto: EditUserDto = {
-          email: 'test@test.com'
+          firstName: 'Test',
+          email: 'test@test.com',
         }
         return pactum.spec().patch('/users').withHeaders({
           Authorization: 'Bearer $S{userAt}'
-        }).withBody(dto).expectStatus(200)
+        }).withBody(dto).expectStatus(200).expectBodyContains(dto.firstName).expectBodyContains(dto.email)
       })
     })
   })
 
   describe('Bookmarks', () => {
-    describe('Create Bookmark', () => { })
+    describe('Get empty Bookmarks', () => {
+      it('should get empty bookmarks', () => {
+        return pactum.spec().get('/bookmarks').withHeaders({
+          Authorization: 'Bearer $S{userAt}'
+        }).expectStatus(200).expectBody([])
+      })
+    })
 
-    describe('Get Bookmarks', () => { })
+    describe('Create Bookmark', () => {
+      it('should create bookmark', () => {
+        const dto: CreateBookmarkDto = {
+          title: 'Test Bookmark',
+          link: 'https://test.com',
+        }
+        return pactum.spec().post('/bookmarks').withHeaders({
+          Authorization: 'Bearer $S{userAt}'
+        }).withBody(dto).expectStatus(201).stores('bookmarkId', 'id')
+      })
+    })
 
-    describe('Get Bookmark by Id', () => { })
+    describe('Get Bookmarks', () => {
+      it('should get bookmarks', () => {
+        return pactum.spec().get('/bookmarks').withHeaders({
+          Authorization: 'Bearer $S{userAt}'
+        }).expectStatus(200).expectJsonLength(1)
+      })
+    })
 
-    describe('Edit Bookmark', () => { })
+    describe('Get Bookmark by Id', () => {
+      it('should get bookmark by id', () => {
+        return pactum.spec().get('/bookmarks/{id}').withPathParams('id', '$S{bookmarkId}').withHeaders({
+          Authorization: 'Bearer $S{userAt}'
+        }).expectStatus(200).expectBodyContains('$S{bookmarkId}')
+      })
+    })
 
-    describe('Delete Bookmark', () => { })
-  })
+    describe('Edit Bookmark by id', () => {
+      const dto: EditBookmarkDto = {
+        description: 'Test Bookmark Description',
+        title: 'Test Bookmark Edited',
+      }
+      it('should edit bookmark', () => {
+        return pactum.spec().patch('/bookmarks/{id}').withPathParams('id', '$S{bookmarkId}').withBody(dto).withHeaders({
+          Authorization: 'Bearer $S{userAt}'
+        }).expectStatus(200).expectBodyContains(dto.title).expectBodyContains(dto.description)
+      })
+    })
 
-  describe('Feedbacks', () => {
-    const dto: FeedbackDto = {
-      message: 'Test Feedback',
-      rating: 5,
-      email: 'test@test.com',
-    }
-    describe('Create Feedback', () => {
-      it('should fail if message is empty', () => {
-        return pactum.spec().post('/feedback').withBody({ rating: dto.rating, email: dto.email }).expectStatus(400)
+    describe('Delete Bookmark', () => {
+      it('should delete bookmark', () => {
+        return pactum.spec().delete('/bookmarks/{id}').withPathParams('id', '$S{bookmarkId}').withHeaders({
+          Authorization: 'Bearer $S{userAt}'
+        }).expectStatus(204)
       })
-      it('should fail if rating is empty', () => {
-        return pactum.spec().post('/feedback').withBody({ message: dto.message, email: dto.email }).expectStatus(400)
-      })
-      it('should fail if rating is not a number', () => {
-        return pactum.spec().post('/feedback').withBody({ message: dto.message, rating: 'five', email: dto.email }).expectStatus(400)
-      })
-      it('should fail if rating is less than 1', () => {
-        return pactum.spec().post('/feedback').withBody({ message: dto.message, rating: 0, email: dto.email }).expectStatus(400)
-      })
-      it('should fail if rating is greater than 5', () => {
-        return pactum.spec().post('/feedback').withBody({ message: dto.message, rating: 6, email: dto.email }).expectStatus(400)
-      })
-      it('should fail if no body is provided', () => {
-        return pactum.spec().post('/feedback').expectStatus(400)
-      })
-      it('should save feedback', () => {
-        return pactum.spec().post('/feedback').withBody(dto).expectStatus(201)
+
+      it('should get empty bookmarks', () => {
+        return pactum.spec().get('/bookmarks').withHeaders({
+          Authorization: 'Bearer $S{userAt}'
+        }).expectStatus(200).expectBody([])
       })
     })
   })
+})
 
-});
+describe('Feedbacks', () => {
+  const dto: FeedbackDto = {
+    message: 'Test Feedback',
+    rating: 5,
+    email: 'test@test.com',
+  }
+  describe('Create Feedback', () => {
+    it('should fail if message is empty', () => {
+      return pactum.spec().post('/feedback').withBody({ rating: dto.rating, email: dto.email }).expectStatus(400)
+    })
+    it('should fail if rating is empty', () => {
+      return pactum.spec().post('/feedback').withBody({ message: dto.message, email: dto.email }).expectStatus(400)
+    })
+    it('should fail if rating is not a number', () => {
+      return pactum.spec().post('/feedback').withBody({ message: dto.message, rating: 'five', email: dto.email }).expectStatus(400)
+    })
+    it('should fail if rating is less than 1', () => {
+      return pactum.spec().post('/feedback').withBody({ message: dto.message, rating: 0, email: dto.email }).expectStatus(400)
+    })
+    it('should fail if rating is greater than 5', () => {
+      return pactum.spec().post('/feedback').withBody({ message: dto.message, rating: 6, email: dto.email }).expectStatus(400)
+    })
+    it('should fail if no body is provided', () => {
+      return pactum.spec().post('/feedback').expectStatus(400)
+    })
+    it('should save feedback', () => {
+      return pactum.spec().post('/feedback').withBody(dto).expectStatus(201)
+    })
+  })
+})
