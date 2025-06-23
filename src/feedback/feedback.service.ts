@@ -1,7 +1,7 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { FeedbackDto } from './dto';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { Injectable, InternalServerErrorException } from '@nestjs/common'
+import { PrismaService } from 'src/prisma/prisma.service'
+import { FeedbackDto } from './dto'
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library'
 
 @Injectable()
 export class FeedbackService {
@@ -21,9 +21,9 @@ export class FeedbackService {
             return feedback
         } catch (error) {
             if (error instanceof PrismaClientKnownRequestError) {
-                throw new InternalServerErrorException('Failed to save feedback');
+                throw new InternalServerErrorException('Failed to save feedback')
             }
-            throw error;
+            throw error
         }
     }
 
