@@ -1,14 +1,12 @@
-version: '3.8'
-
 services:
   dev-db:
     image: postgres:13
     ports:
       - '5434:5432'
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 123
-      POSTGRES_DB: cybus
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     networks:
       - cybus-network
     container_name: cybus-db
@@ -17,9 +15,9 @@ services:
     ports:
       - '5435:5432'
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 123
-      POSTGRES_DB: cybus
+      POSTGRES_USER: ${POSTGRES_TEST_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_TEST_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_TEST_DB}
     networks:
       - cybus-network
     container_name: cybus-test-db
