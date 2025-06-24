@@ -1,3 +1,36 @@
+## Environment Setup
+
+All database operations and testing workflows are designed to run inside Docker.  
+Make sure Docker is running before using any `db:*` or `test:*` scripts.
+
+Environments are configured using `.env` and `.env.test` files.
+
+### Example `.env`
+
+```dotenv
+# Dev DB
+POSTGRES_USER='postgres'
+POSTGRES_PASSWORD='123'
+POSTGRES_DB='cybus'
+
+# Test DB
+POSTGRES_TEST_USER='cybus_test_user'
+POSTGRES_TEST_PASSWORD='123'
+POSTGRES_TEST_DB='cybus_test'
+
+# Connection URL
+DATABASE_URL='postgresql://postgres:123@localhost:5434/cybus?schema=public'
+JWT_SECRET='123'
+```
+
+### Example `.env.test`
+
+```dotenv
+# E2E Connection URL
+DATABASE_URL="postgresql://cybus_test_user:123@localhost:5435/cybus_test?schema=public"
+JWT_SECRET='123'
+```
+
 ## Project setup
 
 ```bash
