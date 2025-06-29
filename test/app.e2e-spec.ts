@@ -198,10 +198,24 @@ describe('Autocomplete (mocked)', () => {
       if (!dto.q) return Promise.resolve([]);
       return Promise.resolve([
         {
-          name: 'Mock Lidl',
-          address: 'Mock City, Cyprus',
-          lat: 12.34,
-          lon: 56.78,
+          name: 'Place C',
+          address: 'Far City',
+          lat: 12.0,
+          lon: 58.0,
+          source: 'mock',
+        },
+        {
+          name: 'Place A',
+          address: 'Near City',
+          lat: 34.7001,
+          lon: 33.0001,
+          source: 'mock',
+        },
+        {
+          name: 'Place B',
+          address: 'Middle City',
+          lat: 20.0,
+          lon: 40.0,
           source: 'mock',
         },
       ]);
@@ -234,9 +248,30 @@ describe('Autocomplete (mocked)', () => {
       .expectStatus(200)
       .expectJsonLike([
         {
-          name: 'Mock Lidl',
+          name: 'Place C',
           source: 'mock',
         },
+        {
+          name: 'Place A',
+          source: 'mock',
+        },
+        {
+          name: 'Place B',
+          source: 'mock',
+        },
+      ]);
+  });
+  it('should return sorted results if user coordinates are provided', () => {
+    return pactum.spec()
+      .get('/autocomplete/search')
+      .withQueryParams('q', 'Lidl')
+      .withQueryParams('latitude', 34.7)
+      .withQueryParams('longitude', 33.0)
+      .expectStatus(200)
+      .expectJson([
+        { name: 'Place A', address: 'Near City', lat: 34.7001, lon: 33.0001, source: 'mock' },
+        { name: 'Place B', address: 'Middle City', lat: 20.0, lon: 40.0, source: 'mock' },
+        { name: 'Place C', address: 'Far City', lat: 12.0, lon: 58.0, source: 'mock' },
       ]);
   });
 
@@ -333,5 +368,14 @@ describe('Autocomplete (mocked)', () => {
       .withQueryParams('latitude', 34.7)
       .withQueryParams('longitude', 33.0)
       .expectStatus(200);
+  });
+
+  it('should return only the limited number of results', () => {
+    return pactum.spec()
+      .get('/autocomplete/search')
+      .withQueryParams('q', 'Lidl')
+      .withQueryParams('limit', 2)
+      .expectStatus(200)
+      .expectJsonLength(2);
   });
 });
