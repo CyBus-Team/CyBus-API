@@ -309,4 +309,29 @@ describe('Autocomplete (mocked)', () => {
       .withQueryParams('language', 'uk')
       .expectStatus(200);
   });
+
+  it('should fail if latitude is not a number', () => {
+    return pactum.spec()
+      .get('/autocomplete/search')
+      .withQueryParams('q', 'Lidl')
+      .withQueryParams('latitude', 'north')
+      .expectStatus(400);
+  });
+
+  it('should fail if longitude is not a number', () => {
+    return pactum.spec()
+      .get('/autocomplete/search')
+      .withQueryParams('q', 'Lidl')
+      .withQueryParams('longitude', 'east')
+      .expectStatus(400);
+  });
+
+  it('should accept valid latitude and longitude', () => {
+    return pactum.spec()
+      .get('/autocomplete/search')
+      .withQueryParams('q', 'Lidl')
+      .withQueryParams('latitude', 34.7)
+      .withQueryParams('longitude', 33.0)
+      .expectStatus(200);
+  });
 });

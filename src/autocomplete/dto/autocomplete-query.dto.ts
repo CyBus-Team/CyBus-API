@@ -1,12 +1,14 @@
 import { Type } from "class-transformer";
-import { IsIn, IsInt, IsNotEmpty, IsOptional, IsString, Min } from "class-validator";
+import { IsIn, IsInt, IsNotEmpty, IsOptional, IsString, Min, IsNumber } from "class-validator";
 
 export class AutocompleteQueryDto {
 
+  // The search query text (e.g., "Lidl")
   @IsNotEmpty()
   @IsString()
   q: string;
 
+  // Optional: maximum number of results to return (must be >= 1)
   @IsOptional()
   @IsInt()
   @Type(() => Number)
@@ -14,7 +16,20 @@ export class AutocompleteQueryDto {
   limit?: number;
 
 
+  // Optional: language for the result (supports 'en', 'el', 'ru', 'uk')
   @IsOptional()
   @IsIn(['en', 'el', 'ru', 'uk'])
   language?: string;
+
+  // Optional: user's latitude to prioritize closer results
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  latitude?: number;
+
+  // Optional: user's longitude to prioritize closer results
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  longitude?: number;
 }
