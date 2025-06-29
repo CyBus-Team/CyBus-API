@@ -7,6 +7,7 @@ import { AuthDto } from 'src/auth/dto';
 import { FeedbackDto } from 'src/feedback/dto';
 import { EditUserDto } from 'src/user/dto';
 import { CreateBookmarkDto, EditBookmarkDto } from 'src/bookmark/dto';
+import { AutocompleteProvider } from 'src/autocomplete/providers/autocomplete-provider.interface';
 
 describe('App E2E Tests', () => {
   let app: INestApplication
@@ -189,33 +190,123 @@ describe('Feedbacks', () => {
   })
 })
 
-describe('Autocomplete', () => {
-  it('should fail if query is missing', () => {
-    return pactum.spec()
-      .get('/autocomplete/search')
-      .expectStatus(400)
-  })
+describe('Autocomplete (mocked)', () => {
+  let app: INestApplication;
 
-  it('should return results for valid query', () => {
+  const mockAutocompleteProvider: AutocompleteProvider = {
+    search: jest.fn().mockImplementation((dto) => {
+      if (!dto.q) return Promise.resolve([]);
+      return Promise.resolve([
+        {
+          name: 'Mock Lidl',
+          address: 'Mock City, Cyprus',
+          lat: 12.34,
+          lon: 56.78,
+          source: 'mock',
+        },
+      ]);
+    }),
+  };
+
+  beforeAll(async () => {
+    const moduleRef = await Test.createTestingModule({
+      imports: [AppModule],
+    })
+      .overrideProvider('AUTOCOMPLETE_PROVIDERS')
+      .useValue([mockAutocompleteProvider])
+      .compile();
+
+    app = moduleRef.createNestApplication();
+    app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
+    await app.init();
+    await app.listen(0);
+    pactum.request.setBaseUrl(await app.getUrl());
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  it('should return mock result for valid query', () => {
     return pactum.spec()
       .get('/autocomplete/search')
       .withQueryParams('q', 'Lidl')
       .expectStatus(200)
-      .expectJsonSchema({
-        type: 'array',
-        minItems: 1,
-      })
-  })
+      .expectJsonLike([
+        {
+          name: 'Mock Lidl',
+          source: 'mock',
+        },
+      ]);
+  });
 
-  it('should return 502 if external provider fails', async () => {
-    const original = process.env.AUTOCOMPLETE_USER_AGENT
-    process.env.AUTOCOMPLETE_USER_AGENT = '' // force block by Nominatim
+  it('should fail if query is missing', () => {
+    return pactum.spec()
+      .get('/autocomplete/search')
+      .expectStatus(400);
+  });
 
-    await pactum.spec()
+  it('should fail if limit is 0', () => {
+    return pactum.spec()
       .get('/autocomplete/search')
       .withQueryParams('q', 'Lidl')
-      .expectStatus(502)
+      .withQueryParams('limit', 0)
+      .expectStatus(400);
+  });
 
-    process.env.AUTOCOMPLETE_USER_AGENT = original // restore
-  })
-})
+  it('should fail if limit is negative', () => {
+    return pactum.spec()
+      .get('/autocomplete/search')
+      .withQueryParams('q', 'Lidl')
+      .withQueryParams('limit', -3)
+      .expectStatus(400);
+  });
+
+  it('should fail if limit is not a number', () => {
+    return pactum.spec()
+      .get('/autocomplete/search')
+      .withQueryParams('q', 'Lidl')
+      .withQueryParams('limit', 'five')
+      .expectStatus(400);
+  });
+
+  it('should fail if language is invalid', () => {
+    return pactum.spec()
+      .get('/autocomplete/search')
+      .withQueryParams('q', 'Lidl')
+      .withQueryParams('language', 'de')
+      .expectStatus(400);
+  });
+
+  it('should accept supported language: en', () => {
+    return pactum.spec()
+      .get('/autocomplete/search')
+      .withQueryParams('q', 'Lidl')
+      .withQueryParams('language', 'en')
+      .expectStatus(200);
+  });
+
+  it('should accept supported language: el', () => {
+    return pactum.spec()
+      .get('/autocomplete/search')
+      .withQueryParams('q', 'Lidl')
+      .withQueryParams('language', 'el')
+      .expectStatus(200);
+  });
+
+  it('should accept supported language: ru', () => {
+    return pactum.spec()
+      .get('/autocomplete/search')
+      .withQueryParams('q', 'Lidl')
+      .withQueryParams('language', 'ru')
+      .expectStatus(200);
+  });
+
+  it('should accept supported language: uk', () => {
+    return pactum.spec()
+      .get('/autocomplete/search')
+      .withQueryParams('q', 'Lidl')
+      .withQueryParams('language', 'uk')
+      .expectStatus(200);
+  });
+});
