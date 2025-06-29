@@ -5,6 +5,7 @@ import { UserModule } from './user/user.module'
 import { BookmarkModule } from './bookmark/bookmark.module'
 import { PrismaModule } from './prisma/prisma.module'
 import { FeedbackModule } from './feedback/feedback.module'
+import { AutocompleteModule } from './autocomplete/autocomplete.module';
 
 @Module({
   imports: [
@@ -15,7 +16,8 @@ import { FeedbackModule } from './feedback/feedback.module'
     UserModule,
     BookmarkModule,
     PrismaModule,
-    FeedbackModule
+    FeedbackModule,
+    AutocompleteModule
   ],
 })
 export class AppModule { }

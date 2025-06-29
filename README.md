@@ -8,6 +8,9 @@ Environments are configured using `.env` and `.env.test` files.
 ### Example `.env`
 
 ```dotenv
+# General settings
+AUTOCOMPLETE_USER_AGENT='CyBusAPI/1.0 (autocompletion service)'
+
 # Dev DB
 POSTGRES_USER='postgres'
 POSTGRES_PASSWORD='123'
