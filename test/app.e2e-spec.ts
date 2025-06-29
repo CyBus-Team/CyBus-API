@@ -188,3 +188,34 @@ describe('Feedbacks', () => {
     })
   })
 })
+
+describe('Autocomplete', () => {
+  it('should fail if query is missing', () => {
+    return pactum.spec()
+      .get('/autocomplete/search')
+      .expectStatus(400)
+  })
+
+  it('should return results for valid query', () => {
+    return pactum.spec()
+      .get('/autocomplete/search')
+      .withQueryParams('q', 'Lidl')
+      .expectStatus(200)
+      .expectJsonSchema({
+        type: 'array',
+        minItems: 1,
+      })
+  })
+
+  it('should return 502 if external provider fails', async () => {
+    const original = process.env.AUTOCOMPLETE_USER_AGENT
+    process.env.AUTOCOMPLETE_USER_AGENT = '' // force block by Nominatim
+
+    await pactum.spec()
+      .get('/autocomplete/search')
+      .withQueryParams('q', 'Lidl')
+      .expectStatus(502)
+
+    process.env.AUTOCOMPLETE_USER_AGENT = original // restore
+  })
+})
