@@ -5,16 +5,23 @@ import { AutocompleteProvider } from './providers/autocomplete-provider.interfac
 @Injectable()
 export class AutocompleteService {
     constructor(
+        // Injects all registered autocomplete providers
         @Inject('AUTOCOMPLETE_PROVIDERS')
         private readonly providers: AutocompleteProvider[],
     ) { }
 
     async search(dto: AutocompleteQueryDto) {
-        const results = await Promise.all(
-            this.providers.map((provider) => provider.search(dto)),
-        )
-
-        const firstNonEmpty = results.find((res) => res.length > 0)
-        return firstNonEmpty ?? []
+        // Sequentially query each provider with the search DTO
+        for (const provider of this.providers) {
+            try {
+                const result = await provider.search(dto)
+                if (result.length > 0) {
+                    return dto.limit ? result.slice(0, dto.limit) : result
+                }
+            } catch (error) {
+                console.log(`Provider ${provider.constructor.name} failed: ${error.message}`)
+            }
+        }
+        return []
     }
 }

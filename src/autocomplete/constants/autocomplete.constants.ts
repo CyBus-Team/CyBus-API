@@ -9,3 +9,6 @@ export const DEFAULT_AUTOCOMPLETE_LANGUAGE = 'en'
 
 // Default country code (ISO 3166-1 alpha-2) used to filter results
 export const DEFAULT_AUTOCOMPLETE_COUNTRY = 'cy'
+
+// Default bounding box coordinates for Cyprus used in Photon provider
+export const DEFAULT_PHOTON_BBOX = '32.0,34.5,34.1,35.7'
