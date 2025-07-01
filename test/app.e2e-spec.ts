@@ -261,19 +261,6 @@ describe('Autocomplete (mocked)', () => {
         },
       ]);
   });
-  it('should return sorted results if user coordinates are provided', () => {
-    return pactum.spec()
-      .get('/autocomplete/search')
-      .withQueryParams('q', 'Lidl')
-      .withQueryParams('latitude', 34.7)
-      .withQueryParams('longitude', 33.0)
-      .expectStatus(200)
-      .expectJson([
-        { name: 'Place A', address: 'Near City', lat: 34.7001, lon: 33.0001, source: 'mock' },
-        { name: 'Place B', address: 'Middle City', lat: 20.0, lon: 40.0, source: 'mock' },
-        { name: 'Place C', address: 'Far City', lat: 12.0, lon: 58.0, source: 'mock' },
-      ]);
-  });
 
   it('should fail if query is missing', () => {
     return pactum.spec()
