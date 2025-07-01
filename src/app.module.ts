@@ -6,6 +6,7 @@ import { BookmarkModule } from './bookmark/bookmark.module'
 import { PrismaModule } from './prisma/prisma.module'
 import { FeedbackModule } from './feedback/feedback.module'
 import { AutocompleteModule } from './autocomplete/autocomplete.module';
+import { GeoModule } from './geo/geo.module';
 
 @Module({
   imports: [
@@ -17,7 +18,8 @@ import { AutocompleteModule } from './autocomplete/autocomplete.module';
     BookmarkModule,
     PrismaModule,
     FeedbackModule,
-    AutocompleteModule
+    AutocompleteModule,
+    GeoModule
   ],
 })
 export class AppModule { }
