@@ -35,6 +35,7 @@
     "@nestjs/jwt": "^11.0.0",
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/schedule": "^6.0.0",
     "@prisma/client": "^6.8.2",
     "argon2": "^0.43.0",
     "axios": "^1.10.0",
@@ -44,7 +45,8 @@
     "passport-jwt": "^4.0.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
-    "shpjs": "^6.1.0"
+    "shapefile": "^0.6.6",
+    "unzipper": "^0.12.3"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
@@ -56,11 +58,13 @@
     "@swc/core": "^1.10.7",
     "@types/axios": "^0.9.36",
     "@types/express": "^5.0.0",
+    "@types/geojson": "^7946.0.16",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.10.7",
     "@types/passport-jwt": "^4.0.1",
     "@types/shpjs": "^3.4.7",
     "@types/supertest": "^6.0.2",
+    "@types/unzipper": "^0.10.11",
     "dotenv-cli": "^8.0.0",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
