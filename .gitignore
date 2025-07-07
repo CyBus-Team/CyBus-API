@@ -1,6 +1,8 @@
 .env
 .env.test
 package-lock.json
+data/shp/*
+data/geojson/*
 
 # compiled output
 /dist
