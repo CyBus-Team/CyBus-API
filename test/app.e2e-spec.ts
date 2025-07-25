@@ -249,6 +249,8 @@ describe('App E2E Tests', () => {
         .expectJsonLike([
           {
             vehicleId: like('any'),
+            routeId: like('any'),
+            label: like('any'),
             latitude: like(1),
             longitude: like(1),
             timestamp: like(1),

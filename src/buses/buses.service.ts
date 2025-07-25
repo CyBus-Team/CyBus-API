@@ -3,13 +3,14 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import axios from 'axios';
 import * as protobuf from 'protobufjs';
+import { BusResultDto } from './dto';
 
 @Injectable()
 export class BusesService {
     private readonly feedUrl = 'http://20.19.98.194:8328/Api/api/gtfs-realtime';
     private readonly protoPath = join(process.cwd(), 'data', 'buses/gtfs-realtime.proto');
 
-    private cache: any[] = [];
+    private cache: BusResultDto[] = [];
     private lastUpdated: Date | null = null;
     private root: protobuf.Root | null = null;
 
@@ -20,7 +21,7 @@ export class BusesService {
         return this.root;
     }
 
-    async fetchVehiclePositions(): Promise<any[]> {
+    async fetchVehiclePositions(): Promise<BusResultDto[]> {
         const root = await this.loadProto();
         const FeedMessage = root.lookupType('transit_realtime.FeedMessage');
 
@@ -31,14 +32,13 @@ export class BusesService {
 
         return object.entity
             .filter((e: any) => e.vehicle)
-            .map((e: any) => ({
-                id: e.id,
+            .map((e: any): BusResultDto => ({
                 vehicleId: e.vehicle.vehicle?.id,
+                routeId: e.vehicle.trip?.routeId,
                 label: e.vehicle.vehicle?.label,
                 latitude: e.vehicle.position?.latitude,
                 longitude: e.vehicle.position?.longitude,
                 timestamp: e.vehicle.timestamp,
-                routeId: e.vehicle.trip?.routeId,
             }));
     }
 
@@ -53,7 +53,7 @@ export class BusesService {
         }
     }
 
-    getCachedVehicles(): any[] {
+    getCachedVehicles(): BusResultDto[] {
         return this.cache;
     }
 
