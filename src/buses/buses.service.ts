@@ -4,7 +4,7 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common'
 import { Cron, CronExpression } from '@nestjs/schedule'
 import axios from 'axios'
 import * as protobuf from 'protobufjs'
-import { BusResultDto } from './dto'
+import { BusResultDto, BusesMetaResultDto } from './dto'
 
 @Injectable()
 export class BusesService implements OnModuleInit {
@@ -77,7 +77,10 @@ export class BusesService implements OnModuleInit {
         return this.cache
     }
 
-    getLastUpdated(): Date | null {
-        return this.lastUpdated
+    getMeta(): BusesMetaResultDto {
+        return {
+            updatedAt: this.lastUpdated?.toISOString() ?? '',
+            vehiclesCount: this.cache.length,
+        }
     }
 }

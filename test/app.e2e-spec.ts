@@ -2,7 +2,7 @@ import { INestApplication, ValidationPipe } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import { AppModule } from 'src/app.module'
 import { PrismaService } from 'src/prisma/prisma.service'
-import pactum from 'pactum'
+import * as pactum from 'pactum'
 import { like } from 'pactum-matchers'
 import { FeedbackDto } from 'src/feedback/dto'
 import { AutocompleteProvider } from 'src/autocomplete/providers/autocomplete-provider.interface'
@@ -66,7 +66,7 @@ describe('App E2E Tests', () => {
   })
 
   describe('Autocomplete (mocked)', () => {
-    let app: INestApplication
+    let mockApp: INestApplication
 
     const mockAutocompleteProvider: AutocompleteProvider = {
       search: jest.fn().mockImplementation((dto) => {
@@ -105,15 +105,15 @@ describe('App E2E Tests', () => {
         .useValue([mockAutocompleteProvider])
         .compile()
 
-      app = moduleRef.createNestApplication()
-      app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }))
-      await app.init()
-      await app.listen(0)
-      pactum.request.setBaseUrl(await app.getUrl())
+      mockApp = moduleRef.createNestApplication()
+      mockApp.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }))
+      await mockApp.init()
+      await mockApp.listen(0)
+      pactum.request.setBaseUrl(await mockApp.getUrl())
     })
 
     afterAll(async () => {
-      await app.close()
+      await mockApp.close()
     })
 
     it('should return mock result for valid query', () => {
