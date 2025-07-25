@@ -36,7 +36,7 @@ export class PhotonProvider implements AutocompleteProvider {
                 source: 'photon',
             }))
         } catch (error) {
-            throw new BadGatewayException('Photon provider error');
+            throw new BadGatewayException('Photon provider error')
         }
     }
 }

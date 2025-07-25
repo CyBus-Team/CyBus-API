@@ -1,5 +1,5 @@
-import { Controller, Get } from '@nestjs/common';
-import { BusesService } from './buses.service';
+import { Controller, Get } from '@nestjs/common'
+import { BusesService } from './buses.service'
 
 @Controller('buses')
 export class BusesController {
@@ -7,7 +7,7 @@ export class BusesController {
 
     @Get()
     getVehicles() {
-        return this.busesService.getCachedVehicles();
+        return this.busesService.getCachedVehicles()
     }
 
     @Get('meta')
@@ -15,6 +15,6 @@ export class BusesController {
         return {
             updatedAt: this.busesService.getLastUpdated(),
             vehiclesCount: this.busesService.getCachedVehicles().length,
-        };
+        }
     }
 }

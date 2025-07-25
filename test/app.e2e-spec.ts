@@ -1,11 +1,11 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import { AppModule } from 'src/app.module'
-import { PrismaService } from 'src/prisma/prisma.service';
-import pactum from 'pactum';
-import { like } from 'pactum-matchers';
-import { FeedbackDto } from 'src/feedback/dto';
-import { AutocompleteProvider } from 'src/autocomplete/providers/autocomplete-provider.interface';
+import { PrismaService } from 'src/prisma/prisma.service'
+import pactum from 'pactum'
+import { like } from 'pactum-matchers'
+import { FeedbackDto } from 'src/feedback/dto'
+import { AutocompleteProvider } from 'src/autocomplete/providers/autocomplete-provider.interface'
 
 describe('App E2E Tests', () => {
   let app: INestApplication
@@ -66,11 +66,11 @@ describe('App E2E Tests', () => {
   })
 
   describe('Autocomplete (mocked)', () => {
-    let app: INestApplication;
+    let app: INestApplication
 
     const mockAutocompleteProvider: AutocompleteProvider = {
       search: jest.fn().mockImplementation((dto) => {
-        if (!dto.q) return Promise.resolve([]);
+        if (!dto.q) return Promise.resolve([])
         return Promise.resolve([
           {
             name: 'Place C',
@@ -93,9 +93,9 @@ describe('App E2E Tests', () => {
             lon: 40.0,
             source: 'mock',
           },
-        ]);
+        ])
       }),
-    };
+    }
 
     beforeAll(async () => {
       const moduleRef = await Test.createTestingModule({
@@ -103,18 +103,18 @@ describe('App E2E Tests', () => {
       })
         .overrideProvider('AUTOCOMPLETE_PROVIDERS')
         .useValue([mockAutocompleteProvider])
-        .compile();
+        .compile()
 
-      app = moduleRef.createNestApplication();
-      app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
-      await app.init();
-      await app.listen(0);
-      pactum.request.setBaseUrl(await app.getUrl());
-    });
+      app = moduleRef.createNestApplication()
+      app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }))
+      await app.init()
+      await app.listen(0)
+      pactum.request.setBaseUrl(await app.getUrl())
+    })
 
     afterAll(async () => {
-      await app.close();
-    });
+      await app.close()
+    })
 
     it('should return mock result for valid query', () => {
       return pactum.spec()
@@ -134,94 +134,94 @@ describe('App E2E Tests', () => {
             name: 'Place B',
             source: 'mock',
           },
-        ]);
-    });
+        ])
+    })
 
     it('should fail if query is missing', () => {
       return pactum.spec()
         .get('/autocomplete/search')
-        .expectStatus(400);
-    });
+        .expectStatus(400)
+    })
 
     it('should fail if limit is 0', () => {
       return pactum.spec()
         .get('/autocomplete/search')
         .withQueryParams('q', 'Lidl')
         .withQueryParams('limit', 0)
-        .expectStatus(400);
-    });
+        .expectStatus(400)
+    })
 
     it('should fail if limit is negative', () => {
       return pactum.spec()
         .get('/autocomplete/search')
         .withQueryParams('q', 'Lidl')
         .withQueryParams('limit', -3)
-        .expectStatus(400);
-    });
+        .expectStatus(400)
+    })
 
     it('should fail if limit is not a number', () => {
       return pactum.spec()
         .get('/autocomplete/search')
         .withQueryParams('q', 'Lidl')
         .withQueryParams('limit', 'five')
-        .expectStatus(400);
-    });
+        .expectStatus(400)
+    })
 
     it('should fail if language is invalid', () => {
       return pactum.spec()
         .get('/autocomplete/search')
         .withQueryParams('q', 'Lidl')
         .withQueryParams('language', 'de')
-        .expectStatus(400);
-    });
+        .expectStatus(400)
+    })
 
     it('should accept supported language: en', () => {
       return pactum.spec()
         .get('/autocomplete/search')
         .withQueryParams('q', 'Lidl')
         .withQueryParams('language', 'en')
-        .expectStatus(200);
-    });
+        .expectStatus(200)
+    })
 
     it('should accept supported language: el', () => {
       return pactum.spec()
         .get('/autocomplete/search')
         .withQueryParams('q', 'Lidl')
         .withQueryParams('language', 'el')
-        .expectStatus(200);
-    });
+        .expectStatus(200)
+    })
 
     it('should accept supported language: ru', () => {
       return pactum.spec()
         .get('/autocomplete/search')
         .withQueryParams('q', 'Lidl')
         .withQueryParams('language', 'ru')
-        .expectStatus(200);
-    });
+        .expectStatus(200)
+    })
 
     it('should accept supported language: uk', () => {
       return pactum.spec()
         .get('/autocomplete/search')
         .withQueryParams('q', 'Lidl')
         .withQueryParams('language', 'uk')
-        .expectStatus(200);
-    });
+        .expectStatus(200)
+    })
 
     it('should fail if latitude is not a number', () => {
       return pactum.spec()
         .get('/autocomplete/search')
         .withQueryParams('q', 'Lidl')
         .withQueryParams('latitude', 'north')
-        .expectStatus(400);
-    });
+        .expectStatus(400)
+    })
 
     it('should fail if longitude is not a number', () => {
       return pactum.spec()
         .get('/autocomplete/search')
         .withQueryParams('q', 'Lidl')
         .withQueryParams('longitude', 'east')
-        .expectStatus(400);
-    });
+        .expectStatus(400)
+    })
 
     it('should accept valid latitude and longitude', () => {
       return pactum.spec()
@@ -229,8 +229,8 @@ describe('App E2E Tests', () => {
         .withQueryParams('q', 'Lidl')
         .withQueryParams('latitude', 34.7)
         .withQueryParams('longitude', 33.0)
-        .expectStatus(200);
-    });
+        .expectStatus(200)
+    })
 
     it('should return only the limited number of results', () => {
       return pactum.spec()
@@ -238,9 +238,10 @@ describe('App E2E Tests', () => {
         .withQueryParams('q', 'Lidl')
         .withQueryParams('limit', 2)
         .expectStatus(200)
-        .expectJsonLength(2);
-    });
+        .expectJsonLength(2)
+    })
   })
+
   describe('Buses', () => {
     it('should return list of vehicles', () => {
       return pactum.spec()
@@ -256,8 +257,8 @@ describe('App E2E Tests', () => {
             longitude: like(1),
             timestamp: like(1),
           },
-        ]);
-    });
+        ])
+    })
 
     it('should return meta with updatedAt and vehiclesCount', () => {
       return pactum.spec()
@@ -266,7 +267,7 @@ describe('App E2E Tests', () => {
         .expectJsonLike({
           updatedAt: like('any'),
           vehiclesCount: like(1),
-        });
-    });
-  });
+        })
+    })
+  })
 })

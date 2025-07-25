@@ -1,8 +1,8 @@
-import { NominatimProvider } from './providers/nominatim.provider';
-import { AutocompleteProvider } from './providers/autocomplete-provider.interface';
-import { Module } from '@nestjs/common';
-import { AutocompleteController } from './autocomplete.controller';
-import { AutocompleteService } from './autocomplete.service';
+import { NominatimProvider } from './providers/nominatim.provider'
+import { AutocompleteProvider } from './providers/autocomplete-provider.interface'
+import { Module } from '@nestjs/common'
+import { AutocompleteController } from './autocomplete.controller'
+import { AutocompleteService } from './autocomplete.service'
 
 @Module({
   controllers: [AutocompleteController],
