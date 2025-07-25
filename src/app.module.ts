@@ -4,6 +4,7 @@ import { PrismaModule } from './prisma/prisma.module'
 import { FeedbackModule } from './feedback/feedback.module'
 import { AutocompleteModule } from './autocomplete/autocomplete.module';
 import { GeoModule } from './geo/geo.module';
+import { BusesModule } from './buses/buses.module';
 
 @Module({
   imports: [
@@ -13,7 +14,8 @@ import { GeoModule } from './geo/geo.module';
     PrismaModule,
     FeedbackModule,
     AutocompleteModule,
-    GeoModule
+    GeoModule,
+    BusesModule
   ],
 })
 export class AppModule { }
