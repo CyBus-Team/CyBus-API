@@ -1,15 +1,21 @@
 import { join } from 'path'
 import { promises as fs } from 'fs'
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common'
+import { Injectable, OnModuleInit } from '@nestjs/common'
 import { Cron, CronExpression } from '@nestjs/schedule'
 import axios from 'axios'
 import * as protobuf from 'protobufjs'
 import { BusResultDto, BusesMetaResultDto } from './dto'
+import {
+    GTFS_FEED_URL,
+    GTFS_PROTO_PATH,
+    ROUTES_GEOJSON_PATH,
+    DEFAULT_BUSES_CRON
+} from './constants/buses.constants'
 
 @Injectable()
 export class BusesService implements OnModuleInit {
-    private readonly feedUrl = 'http://20.19.98.194:8328/Api/api/gtfs-realtime'
-    private readonly protoPath = join(process.cwd(), 'data', 'buses/gtfs-realtime.proto')
+    private readonly feedUrl = GTFS_FEED_URL
+    private readonly protoPath = GTFS_PROTO_PATH
 
     private cache: BusResultDto[] = []
     private lastUpdated: Date | null = null
@@ -24,20 +30,36 @@ export class BusesService implements OnModuleInit {
     }
 
     private async loadRouteLabelsFromGeoJson() {
-        const filePath = join(process.cwd(), 'data', 'geojson', 'routes.geojson')
-        const raw = await fs.readFile(filePath, 'utf-8')
-        const json = JSON.parse(raw)
-
-        for (const feature of json.features) {
-            const props = feature.properties
-            if (props?.LINE_ID && props?.LINE_NAME) {
-                this.routeLabelsById.set(props.LINE_ID.toString(), props.LINE_NAME.toString())
+        try {
+            const filePath = ROUTES_GEOJSON_PATH;
+            const exists = await fs.access(filePath).then(() => true).catch(() => false);
+            if (!exists) {
+                return;
             }
+
+            const raw = await fs.readFile(filePath, 'utf-8');
+            const json = JSON.parse(raw);
+
+            for (const feature of json.features) {
+                if (!feature.properties) {
+                    continue;
+                }
+                const props = feature.properties;
+                if (props?.LINE_ID && props?.LINE_NAME) {
+                    this.routeLabelsById.set(props.LINE_ID.toString(), props.LINE_NAME.toString());
+                }
+            }
+        } catch (error) {
+            console.log('❌ Failed to load routes.geojson:', error);
         }
     }
 
     async onModuleInit() {
-        await this.loadRouteLabelsFromGeoJson()
+        try {
+            await this.loadRouteLabelsFromGeoJson()
+        } catch (error) {
+            console.log('🚀 onModuleInit failed in BusesService', error)
+        }
     }
 
     async fetchVehiclePositions(): Promise<BusResultDto[]> {
@@ -62,7 +84,7 @@ export class BusesService implements OnModuleInit {
             }))
     }
 
-    @Cron(process.env.BUSES_PARSE_CRON ?? CronExpression.EVERY_MINUTE)
+    @Cron(DEFAULT_BUSES_CRON)
     async updateCache() {
         try {
             const vehicles = await this.fetchVehiclePositions()
@@ -73,14 +95,21 @@ export class BusesService implements OnModuleInit {
         }
     }
 
-    getCachedVehicles(): BusResultDto[] {
+    getCachedBuses(): BusResultDto[] {
         return this.cache
     }
 
     getMeta(): BusesMetaResultDto {
-        return {
-            updatedAt: this.lastUpdated?.toISOString() ?? '',
-            vehiclesCount: this.cache.length,
+        try {
+            return {
+                updatedAt: this.lastUpdated?.toISOString() ?? '',
+                vehiclesCount: this.cache.length ?? 0,
+            };
+        } catch (error) {
+            return {
+                updatedAt: '',
+                vehiclesCount: 0,
+            };
         }
     }
 }

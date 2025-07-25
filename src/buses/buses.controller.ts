@@ -7,8 +7,8 @@ export class BusesController {
     constructor(private readonly busesService: BusesService) { }
 
     @Get()
-    getVehicles(): BusResultDto[] {
-        return this.busesService.getCachedVehicles()
+    getBuses(): BusResultDto[] {
+        return this.busesService.getCachedBuses()
     }
 
     @Get('meta')
