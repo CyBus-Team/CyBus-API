@@ -5,4 +5,5 @@ export class BusResultDto {
     latitude: number;     // Current latitude of the vehicle
     longitude: number;    // Current longitude of the vehicle
     timestamp: number;    // Timestamp of the last known vehicle position (Unix epoch)
+    shortLabel: string; // Short route label (e.g. "7", "22", etc.)
 }
