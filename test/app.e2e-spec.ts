@@ -2,7 +2,8 @@ import { INestApplication, ValidationPipe } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import { AppModule } from 'src/app.module'
 import { PrismaService } from 'src/prisma/prisma.service';
-import * as pactum from 'pactum'
+import pactum from 'pactum';
+import { like } from 'pactum-matchers';
 import { FeedbackDto } from 'src/feedback/dto';
 import { AutocompleteProvider } from 'src/autocomplete/providers/autocomplete-provider.interface';
 
@@ -240,4 +241,29 @@ describe('App E2E Tests', () => {
         .expectJsonLength(2);
     });
   })
+  describe('Buses', () => {
+    it('should return list of vehicles', () => {
+      return pactum.spec()
+        .get('/buses')
+        .expectStatus(200)
+        .expectJsonLike([
+          {
+            vehicleId: like('any'),
+            latitude: like(1),
+            longitude: like(1),
+            timestamp: like(1),
+          },
+        ]);
+    });
+
+    it('should return meta with updatedAt and vehiclesCount', () => {
+      return pactum.spec()
+        .get('/buses/meta')
+        .expectStatus(200)
+        .expectJsonLike({
+          updatedAt: like('any'),
+          vehiclesCount: like(1),
+        });
+    });
+  });
 })
