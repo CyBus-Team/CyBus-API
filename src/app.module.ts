@@ -5,7 +5,7 @@ import { FeedbackModule } from './feedback/feedback.module'
 import { AutocompleteModule } from './autocomplete/autocomplete.module'
 import { GeoModule } from './geo/geo.module'
 import { BusesModule } from './buses/buses.module'
-import { RoutesModule } from './routes/routes.module';
+import { RoutesModule } from './routes/routes.module'
 
 @Module({
   imports: [

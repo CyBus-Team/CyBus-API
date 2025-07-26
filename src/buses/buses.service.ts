@@ -30,26 +30,26 @@ export class BusesService implements OnModuleInit {
 
     private async loadRouteLabelsFromGeoJson() {
         try {
-            const filePath = ROUTES_GEOJSON_PATH;
-            const exists = await fs.access(filePath).then(() => true).catch(() => false);
+            const filePath = ROUTES_GEOJSON_PATH
+            const exists = await fs.access(filePath).then(() => true).catch(() => false)
             if (!exists) {
-                return;
+                return
             }
 
-            const raw = await fs.readFile(filePath, 'utf-8');
-            const json = JSON.parse(raw);
+            const raw = await fs.readFile(filePath, 'utf-8')
+            const json = JSON.parse(raw)
 
             for (const feature of json.features) {
                 if (!feature.properties) {
-                    continue;
+                    continue
                 }
-                const props = feature.properties;
+                const props = feature.properties
                 if (props?.LINE_ID && props?.LINE_NAME) {
-                    this.routeLabelsById.set(props.LINE_ID.toString(), props.LINE_NAME.toString());
+                    this.routeLabelsById.set(props.LINE_ID.toString(), props.LINE_NAME.toString())
                 }
             }
         } catch (error) {
-            console.log('❌ Failed to load routes.geojson:', error);
+            console.log('❌ Failed to load routes.geojson:', error)
         }
     }
 

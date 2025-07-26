@@ -33,7 +33,7 @@ export class GeoService {
         const records = parse(content, {
             columns: true,
             skip_empty_lines: true,
-            delimiter: ';',
+            delimiter: '',
         }) as StopCsvRow[]
 
         const features = records.flatMap((row) => {
