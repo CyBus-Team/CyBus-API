@@ -43,6 +43,6 @@ export class RoutesService {
 
         const firstStop = matching[0]?.properties?.FIRST_STOP || null;
         const lastStop = matching[0]?.properties?.LAST_STOP_ || null;
-        return new RouteResultDto(stops, shape, firstStop, lastStop);
+        return new RouteResultDto(stops, firstStop, lastStop, shape);
     }
 }
