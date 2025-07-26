@@ -1,6 +1,7 @@
 .env
 .env.test
 package-lock.json
+data/stops/*
 data/shp/*
 data/geojson/*
 

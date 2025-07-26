@@ -10,7 +10,8 @@ Environments are configured using `.env` and `.env.test` files.
 ```dotenv
 # General settings
 AUTOCOMPLETE_USER_AGENT='CyBusAPI/1.0 (autocompletion service)'
-ROUTES_PARSE_CRON="0 3 * * *"  # Cron expression for parsing routes.geo data
+ROUTES_PARSE_CRON="0 3 * * *" # Every day at 3 AM
+STOPS_PARSE_CRON="0 4 * * *" # Every day at 4 AM
 BUSES_PARSE_CRON="*/1 * * * *" # Every minute
 
 # Dev DB

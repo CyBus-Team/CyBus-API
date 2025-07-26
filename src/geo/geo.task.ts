@@ -50,4 +50,38 @@ export class GeoTask {
             console.error('[GeoTask] Failed to process geo data:', error.message)
         }
     }
+
+
+    // Cron job to fetch and convert CSV stops file to GeoJSON (default: daily at 4 AM)
+    @Cron(process.env.STOPS_PARSE_CRON ?? '0 4 * * *')
+    async downloadAndConvertStopsCsv() {
+        const csvUrl = 'https://motionbuscard.org.cy/opendata/downloadfile'
+        const csvPath = path.resolve(__dirname, '../../data/shp/stops.csv')
+        const stopsGeoJsonOutputPath = path.resolve(__dirname, '../../data/geojson/stops.geojson')
+
+        try {
+            const csvResponse = await axios.get<Stream>(csvUrl, {
+                responseType: 'stream',
+                params: {
+                    file: 'Topology\\stops\\stops.csv',
+                    rel: 'True',
+                },
+            })
+            const csvWriter = createWriteStream(csvPath)
+
+            csvResponse.data.pipe(csvWriter)
+
+            await new Promise<void>((resolve, reject) => {
+                csvWriter.on('finish', () => resolve(undefined))
+                csvWriter.on('error', reject)
+            })
+
+            const stopsGeojson = await this.geoService.loadGeoDataFromCsv(csvPath)
+
+            await fs.writeFile(stopsGeoJsonOutputPath, JSON.stringify(stopsGeojson, null, 2), 'utf-8')
+            console.log(`[GeoTask] Parsed stops and saved to ${stopsGeoJsonOutputPath}`)
+        } catch (csvError) {
+            console.error('[GeoTask] Failed to process stops CSV:', csvError.message)
+        }
+    }
 }
