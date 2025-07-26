@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { RouteResultDto, RoutesQueryDto } from './dto';
+import { LatLonPoint } from './dto'
 import { join } from 'path';
 import { readFileSync } from 'fs';
 import { Feature, LineString, Point } from 'geojson';
@@ -28,13 +29,15 @@ export class RoutesService {
         }
 
         const stops: Point[] = []
-        let shape: { lat: number; lon: number }[] = []
+        let shape: LatLonPoint[] = []
 
         for (const feature of matching) {
             if (feature.geometry.type === 'Point') {
                 stops.push(feature.geometry as Point)
             } else if (feature.geometry.type === 'LineString') {
-                shape = (feature.geometry as LineString).coordinates.map(([lon, lat]) => ({ lat, lon }))
+                shape = (feature.geometry as LineString).coordinates.map(
+                    ([lon, lat]): LatLonPoint => ({ lat, lon })
+                )
             }
         }
 

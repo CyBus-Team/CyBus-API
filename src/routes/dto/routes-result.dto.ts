@@ -1,9 +1,14 @@
+export type LatLonPoint = {
+    lat: number
+    lon: number
+}
+
 export class RouteResultDto {
     constructor(
         stops: GeoJSON.Point[],
-        shape: { lat: number; lon: number }[] | null,
-        firstStop: GeoJSON.Point | null,
-        lastStop: GeoJSON.Point | null
+        shape: LatLonPoint[] | null,
+        firstStop: LatLonPoint | null,
+        lastStop: LatLonPoint | null
     ) {
         this.stops = stops
         this.shape = shape
@@ -12,7 +17,7 @@ export class RouteResultDto {
     }
 
     stops: GeoJSON.Point[]           // Array of stop coordinates
-    shape: { lat: number; lon: number }[] | null // Array of coordinate objects representing the route polyline
-    firstStop: GeoJSON.Point | null  // First stop of the route
-    lastStop: GeoJSON.Point | null   // Last stop of the route
+    shape: LatLonPoint[] | null // Array of coordinate objects representing the route polyline
+    firstStop: LatLonPoint | null    // First stop as coordinate object
+    lastStop: LatLonPoint | null     // Last stop as coordinate object
 }
