@@ -1,7 +1,6 @@
-import { join } from 'path'
 import { promises as fs } from 'fs'
 import { Injectable, OnModuleInit } from '@nestjs/common'
-import { Cron, CronExpression } from '@nestjs/schedule'
+import { Cron } from '@nestjs/schedule'
 import axios from 'axios'
 import * as protobuf from 'protobufjs'
 import { BusResultDto, BusesMetaResultDto } from './dto'
@@ -73,15 +72,15 @@ export class BusesService implements OnModuleInit {
 
         return object.entity
             .filter((e: any) => e.vehicle)
-            .map((e: any): BusResultDto => ({
-                vehicleId: e.vehicle.vehicle?.id,
-                routeId: e.vehicle.trip?.routeId,
-                label: e.vehicle.vehicle?.label,
-                shortLabel: this.routeLabelsById.get(e.vehicle.trip?.routeId) ?? '',
-                latitude: e.vehicle.position?.latitude,
-                longitude: e.vehicle.position?.longitude,
-                timestamp: e.vehicle.timestamp,
-            }))
+            .map((e: any) => new BusResultDto(
+                e.vehicle.vehicle?.id,
+                e.vehicle.trip?.routeId,
+                e.vehicle.vehicle?.label,
+                e.vehicle.position?.latitude,
+                e.vehicle.position?.longitude,
+                e.vehicle.timestamp,
+                this.routeLabelsById.get(e.vehicle.trip?.routeId) ?? ''
+            ))
     }
 
     @Cron(DEFAULT_BUSES_CRON)
@@ -101,15 +100,9 @@ export class BusesService implements OnModuleInit {
 
     getMeta(): BusesMetaResultDto {
         try {
-            return {
-                updatedAt: this.lastUpdated?.toISOString() ?? '',
-                vehiclesCount: this.cache.length ?? 0,
-            };
+            return new BusesMetaResultDto(this.lastUpdated?.toISOString() ?? '', this.cache.length ?? 0)
         } catch (error) {
-            return {
-                updatedAt: '',
-                vehiclesCount: 0,
-            };
+            throw error
         }
     }
 }
