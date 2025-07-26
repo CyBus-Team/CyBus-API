@@ -6,6 +6,7 @@ import * as pactum from 'pactum'
 import { like } from 'pactum-matchers'
 import { FeedbackDto } from 'src/feedback/dto'
 import { AutocompleteProvider } from 'src/autocomplete/providers/autocomplete-provider.interface'
+import { RoutesQueryDto } from 'src/routes/dto'
 
 describe('App E2E Tests', () => {
   let app: INestApplication
@@ -32,6 +33,29 @@ describe('App E2E Tests', () => {
 
   afterAll(() => {
     app.close()
+  })
+
+  describe('Routes', () => {
+    const dto: RoutesQueryDto = {
+      tripId: '380012',
+    }
+    describe('Get route', () => {
+      it('should fail if tripId is empty', () => {
+        return pactum.spec().get('/routes').withQueryParams({ tripId: '' }).expectStatus(400)
+      })
+      it('should fail if no query is provided', () => {
+        return pactum.spec().get('/routes').expectStatus(400)
+      })
+      it('should fail if route is not found', () => {
+        return pactum.spec().get('/routes').withQueryParams({ tripId: '999999' }).expectStatus(404)
+      })
+      it('should return routes if tripId is a number', () => {
+        return pactum.spec().get('/routes').withQueryParams({ tripId: 380012 }).expectStatus(200)
+      })
+      it('should return routes', () => {
+        return pactum.spec().get('/routes').withQueryParams(dto).expectStatus(200)
+      })
+    })
   })
 
   describe('Feedbacks', () => {

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { RouteResultDto, RoutesQueryDto } from './dto';
 import { join } from 'path';
 import { readFileSync } from 'fs';
@@ -21,9 +21,11 @@ export class RoutesService {
 
     getRouteByTrip(dto: RoutesQueryDto): RouteResultDto {
         const matching = this.features.filter(f =>
-            f.properties?.TRIP_ID === dto.tripId &&
-            f.properties?.LINE_NAME === dto.lineName
+            f.properties?.LINE_ID === dto.tripId
         )
+        if (matching.length === 0) {
+            throw new NotFoundException(`No route found for tripId: ${dto.tripId}`);
+        }
 
         const stops: Point[] = []
         let shape: LineString | null = null
@@ -36,6 +38,8 @@ export class RoutesService {
             }
         }
 
-        return new RouteResultDto(stops, shape)
+        const firstStop = matching[0]?.properties?.FIRST_STOP || null;
+        const lastStop = matching[0]?.properties?.LAST_STOP_ || null;
+        return new RouteResultDto(stops, shape, firstStop, lastStop);
     }
 }
