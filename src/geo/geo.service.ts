@@ -33,20 +33,25 @@ export class GeoService {
         const records = parse(content, {
             columns: true,
             skip_empty_lines: true,
+            delimiter: ';',
         }) as StopCsvRow[]
 
-        const features = records.map((row) => {
-            const lat = parseFloat(row['LAT'])
-            const lon = parseFloat(row['LON'])
+        const features = records.flatMap((row) => {
+            const lat = Number.parseFloat(row['lat'].replace(',', '.'))
+            const lon = Number.parseFloat(row['lon'].replace(',', '.'))
 
-            return {
+            if (Number.isNaN(lat) || Number.isNaN(lon)) {
+                return []
+            }
+
+            return [{
                 type: 'Feature',
                 geometry: {
                     type: 'Point',
                     coordinates: [lon, lat],
                 },
                 properties: row,
-            }
+            }]
         })
 
         return {

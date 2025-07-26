@@ -56,7 +56,7 @@ export class GeoTask {
     @Cron(process.env.STOPS_PARSE_CRON ?? '0 4 * * *')
     async downloadAndConvertStopsCsv() {
         const csvUrl = 'https://motionbuscard.org.cy/opendata/downloadfile'
-        const csvPath = path.resolve(__dirname, '../../data/shp/stops.csv')
+        const csvPath = path.resolve(__dirname, '../../data/stops/stops.csv')
         const stopsGeoJsonOutputPath = path.resolve(__dirname, '../../data/geojson/stops.geojson')
 
         try {
