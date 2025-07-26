@@ -28,13 +28,13 @@ export class RoutesService {
         }
 
         const stops: Point[] = []
-        let shape: LineString | null = null
+        let shape: { lat: number; lon: number }[] = []
 
         for (const feature of matching) {
             if (feature.geometry.type === 'Point') {
                 stops.push(feature.geometry as Point)
             } else if (feature.geometry.type === 'LineString') {
-                shape = feature.geometry as LineString
+                shape = (feature.geometry as LineString).coordinates.map(([lon, lat]) => ({ lat, lon }))
             }
         }
 
