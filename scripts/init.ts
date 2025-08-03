@@ -19,7 +19,7 @@ async function main() {
         path.resolve(__dirname, '../data/gtfs/gtfs6.zip'),
         path.resolve(__dirname, '../data/gtfs/gtfs7.zip'),
     ]
-    const gtfsOutputDir = path.resolve(__dirname, '../data/gtfs/merged')
+    const gtfsOutputDir = path.resolve(__dirname, '../data/gtfs')
     const stopsCsvPath = path.resolve(__dirname, '../data/stops/stops.csv')
     const shapeZipPath = path.resolve(__dirname, '../data/shp/routes.zip')
 
@@ -28,29 +28,29 @@ async function main() {
         const allGtfsExist = zipPaths.every(p => fs.existsSync(p))
         if (allGtfsExist) {
             await geoService.loadGtfsData(zipPaths, gtfsOutputDir)
-            console.log('✅ GTFS data processed successfully')
+            console.log('✅ GTFS done')
         } else {
             await geoTask.downloadAndMergeGtfs()
         }
 
         // Stops CSV to GeoJSON
         if (fs.existsSync(stopsCsvPath)) {
-            const stopsGeoJson = await geoService.loadGeoDataFromCsv(stopsCsvPath)
-            console.log('✅ Stops CSV parsed to GeoJSON:', JSON.stringify(stopsGeoJson, null, 2))
+            await geoService.loadGeoDataFromCsv(stopsCsvPath)
+            console.log('✅ Stops done')
         } else {
             await geoTask.downloadAndConvertStopsCsv()
-            const stopsGeoJson = await geoService.loadGeoDataFromCsv(stopsCsvPath)
-            console.log('✅ Stops CSV parsed to GeoJSON after download:', JSON.stringify(stopsGeoJson, null, 2))
+            await geoService.loadGeoDataFromCsv(stopsCsvPath)
+            console.log('✅ Stops done')
         }
 
         // Shapefile ZIP to GeoJSON
         if (fs.existsSync(shapeZipPath)) {
-            const shapeGeoJson = await geoService.loadGeoDataFromZip(shapeZipPath)
-            console.log('✅ Shapefile ZIP parsed to GeoJSON:', JSON.stringify(shapeGeoJson, null, 2))
+            await geoService.loadGeoDataFromZip(shapeZipPath)
+            console.log('✅ Shapes done')
         } else {
             await geoTask.handleGeoParsing()
-            const shapeGeoJson = await geoService.loadGeoDataFromZip(shapeZipPath)
-            console.log('✅ Shapefile ZIP parsed to GeoJSON after download:', JSON.stringify(shapeGeoJson, null, 2))
+            await geoService.loadGeoDataFromZip(shapeZipPath)
+            console.log('✅ Shapes done')
         }
 
     } catch (error) {

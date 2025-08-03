@@ -44,6 +44,14 @@ JWT_SECRET='123'
 $ yarn install
 ```
 
+## Initialize data
+
+After installing dependencies and setting up the database, initialize required data files:
+
+```bash
+$ yarn init:data
+```
+
 ## Compile and run the project
 
 ```bash

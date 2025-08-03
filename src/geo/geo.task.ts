@@ -98,7 +98,7 @@ export class GeoTask {
             'https://www.motionbuscard.org.cy/opendata/downloadfile?file=GTFS\\11_google_transit.zip&rel=True',
         ]
 
-        const outputDir = path.resolve(__dirname, '../../data/gtfs/')
+        const outputDir = path.resolve(__dirname, '../../data/gtfs')
         await fs.mkdir(outputDir, { recursive: true })
 
         try {
@@ -121,7 +121,6 @@ export class GeoTask {
             }
 
             await this.geoService.loadGtfsData(downloadedFiles, outputDir)
-            console.log(`[GeoTask] GTFS archives processed and merged into ${outputDir}`)
         } catch (gtfsError) {
             console.error('[GeoTask] Failed to process GTFS archives:', gtfsError.message)
         }
