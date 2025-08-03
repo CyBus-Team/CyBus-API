@@ -6,6 +6,7 @@ import { AutocompleteModule } from './autocomplete/autocomplete.module'
 import { GeoModule } from './geo/geo.module'
 import { BusesModule } from './buses/buses.module'
 import { RoutesModule } from './routes/routes.module'
+import { TripModule } from './trip/trip.module'
 
 @Module({
   imports: [
@@ -17,7 +18,8 @@ import { RoutesModule } from './routes/routes.module'
     AutocompleteModule,
     GeoModule,
     BusesModule,
-    RoutesModule
+    RoutesModule,
+    TripModule
   ],
 })
 export class AppModule { }
