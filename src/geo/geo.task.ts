@@ -84,4 +84,46 @@ export class GeoTask {
             console.error('[GeoTask] Failed to process stops CSV:', csvError.message)
         }
     }
+    // Cron job to fetch GTFS ZIP archives and process them (default: every 5 minutes)
+    // @Cron(process.env.GTFS_PARSE_CRON ?? '0 5 * * *')
+    @Cron('*/5 * * * *')
+    async downloadAndMergeGtfs() {
+        const urls = [
+            'https://www.motionbuscard.org.cy/opendata/downloadfile?file=GTFS\\6_google_transit.zip&rel=True',
+            'https://www.motionbuscard.org.cy/opendata/downloadfile?file=GTFS\\2_google_transit.zip&rel=True',
+            'https://www.motionbuscard.org.cy/opendata/downloadfile?file=GTFS\\4_google_transit.zip&rel=True',
+            'https://www.motionbuscard.org.cy/opendata/downloadfile?file=GTFS\\5_google_transit.zip&rel=True',
+            'https://www.motionbuscard.org.cy/opendata/downloadfile?file=GTFS\\9_google_transit.zip&rel=True',
+            'https://www.motionbuscard.org.cy/opendata/downloadfile?file=GTFS\\10_google_transit.zip&rel=True',
+            'https://www.motionbuscard.org.cy/opendata/downloadfile?file=GTFS\\11_google_transit.zip&rel=True',
+        ]
+
+        const outputDir = path.resolve(__dirname, '../../data/gtfs/')
+        await fs.mkdir(outputDir, { recursive: true })
+
+        try {
+            const downloadedFiles: string[] = []
+
+            for (const url of urls) {
+                const fileName = `gtfs${urls.indexOf(url) + 1}.zip`
+                const zipPath = path.join(outputDir, fileName)
+
+                const zipResponse = await axios.get<Stream>(url, { responseType: 'stream' })
+                const zipWriter = createWriteStream(zipPath)
+                zipResponse.data.pipe(zipWriter)
+
+                await new Promise<void>((resolve, reject) => {
+                    zipWriter.on('finish', () => resolve(undefined))
+                    zipWriter.on('error', reject)
+                })
+
+                downloadedFiles.push(zipPath)
+            }
+
+            await this.geoService.loadGtfsData(downloadedFiles, outputDir)
+            console.log(`[GeoTask] GTFS archives processed and merged into ${outputDir}`)
+        } catch (gtfsError) {
+            console.error('[GeoTask] Failed to process GTFS archives:', gtfsError.message)
+        }
+    }
 }

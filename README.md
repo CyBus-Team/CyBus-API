@@ -12,6 +12,7 @@ Environments are configured using `.env` and `.env.test` files.
 AUTOCOMPLETE_USER_AGENT='CyBusAPI/1.0 (autocompletion service)'
 ROUTES_PARSE_CRON="0 3 * * *" # Every day at 3 AM
 STOPS_PARSE_CRON="0 4 * * *" # Every day at 4 AM
+GTFS_PARSE_CRON="0 5 * * *" # Every day at 5 AM
 BUSES_PARSE_CRON="*/1 * * * *" # Every minute
 
 # Dev DB
