@@ -5,8 +5,6 @@ export type LatLonPoint = {
 
 export type StopDto = {
     description: string          // Default description (usually localized)
-    descriptionEl: string       // Description in Greek
-    descriptionEn: string       // Description in English
     lat: number                  // Latitude of the stop
     lon: number                  // Longitude of the stop
 }

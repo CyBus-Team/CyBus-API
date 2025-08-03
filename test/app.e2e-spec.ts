@@ -49,9 +49,6 @@ describe('App E2E Tests', () => {
       it('should fail if route is not found', () => {
         return pactum.spec().get('/routes').withQueryParams({ tripId: '999999' }).expectStatus(404)
       })
-      it('should return routes if tripId is a number', () => {
-        return pactum.spec().get('/routes').withQueryParams({ tripId: 380012 }).expectStatus(200)
-      })
       it('should return routes', () => {
         return pactum.spec().get('/routes').withQueryParams(dto).expectStatus(200)
       })

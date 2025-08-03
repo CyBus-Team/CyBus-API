@@ -76,12 +76,16 @@ export class GeoService {
      * to the specified output directory.
      */
     async loadGtfsData(zipPaths: string[], outputDir: string) {
+        if (!Array.isArray(zipPaths)) {
+            throw new Error('Expected zipPaths to be an array of strings')
+        }
         await fs.promises.mkdir(outputDir, { recursive: true })
+
+        const allRecordsMap = new Map<string, any[]>()
 
         for (const zipPath of zipPaths) {
             const directory = await unzipper.Open.file(zipPath)
             for (const fileEntry of directory.files) {
-                console.log(`Processing file: ${fileEntry.path}`)
                 if (!fileEntry.path.endsWith('.txt')) continue
 
                 const content = await fileEntry.buffer()
@@ -91,9 +95,24 @@ export class GeoService {
                 })
 
                 const baseName = path.basename(fileEntry.path, '.txt')
-                const filePath = path.join(outputDir, `${baseName}.json`)
-                await fs.promises.writeFile(filePath, JSON.stringify(records, null, 2), 'utf-8')
+                if (!allRecordsMap.has(baseName)) {
+                    allRecordsMap.set(baseName, [])
+                }
+
+                if (Array.isArray(records)) {
+                    const existing = allRecordsMap.get(baseName)!
+                    for (const record of records) {
+                        if (typeof record === 'object' && record !== null) {
+                            existing.push(record)
+                        }
+                    }
+                }
             }
+        }
+
+        for (const [baseName, records] of allRecordsMap.entries()) {
+            const filePath = path.join(outputDir, `${baseName}.json`)
+            await fs.promises.writeFile(filePath, JSON.stringify(records, null, 2), 'utf-8')
         }
 
         console.log(`[GeoService] Finished processing GTFS files into ${outputDir}`)
