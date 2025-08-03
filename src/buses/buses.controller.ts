@@ -1,20 +1,18 @@
-import { Controller, Get } from '@nestjs/common';
-import { BusesService } from './buses.service';
+import { Controller, Get } from '@nestjs/common'
+import { BusesService } from './buses.service'
+import { BusesMetaResultDto, BusResultDto } from './dto'
 
 @Controller('buses')
 export class BusesController {
     constructor(private readonly busesService: BusesService) { }
 
     @Get()
-    getVehicles() {
-        return this.busesService.getCachedVehicles();
+    getBuses(): BusResultDto[] {
+        return this.busesService.getCachedBuses()
     }
 
     @Get('meta')
-    getMeta() {
-        return {
-            updatedAt: this.busesService.getLastUpdated(),
-            vehiclesCount: this.busesService.getCachedVehicles().length,
-        };
+    getMeta(): BusesMetaResultDto {
+        return this.busesService.getMeta()
     }
 }

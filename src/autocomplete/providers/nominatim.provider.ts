@@ -43,7 +43,7 @@ export class NominatimProvider implements AutocompleteProvider {
                 source: 'nominatim',
             }))
         } catch (error) {
-            throw new BadGatewayException('Nominatim provider error');
+            throw new BadGatewayException('Nominatim provider error')
         }
     }
 }
