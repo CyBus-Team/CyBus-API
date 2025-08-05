@@ -174,7 +174,7 @@ export class GeoTask {
             for (let i = 0; i < urls.length; i++) {
                 const url = urls[i]
                 const zipPath = path.join(tempDir, `gtfs${i + 1}.zip`)
-                console.log(`[GeoTask] Downloading ${url} to ${zipPath}`)
+                console.log(`📥 [GeoTask] → Downloading GTFS: ${url} → ${zipPath}`)
 
                 const response = await axios.get<Stream>(url, { responseType: 'stream' })
                 await new Promise<void>((resolve, reject) => {
@@ -187,7 +187,7 @@ export class GeoTask {
                 // Extract to a separate directory using unzipper
                 const extractDir = path.join(tempDir, `extracted${i + 1}`)
                 await fs.mkdir(extractDir, { recursive: true })
-                console.log(`[GeoTask] Extracting ${zipPath} to ${extractDir}`)
+                console.log(`📂 [GeoTask] → Extracting ZIP: ${zipPath} → ${extractDir}`)
                 await createReadStream(zipPath).pipe(unzipper.Extract({ path: extractDir })).promise()
                 extractDirs.push(extractDir)
             }
@@ -200,7 +200,7 @@ export class GeoTask {
 
             // For each file, merge contents from all extracted dirs
             for (const file of files) {
-                console.log(`[GeoTask] Merging ${file}`)
+                console.log(`🧩 [GeoTask]   • Merging file: ${file}`)
                 const mergedFilePath = path.join(mergedDir, file)
                 let header: string | null = null
                 let mergedLines: string[] = []
@@ -232,8 +232,8 @@ export class GeoTask {
             await fs.mkdir(path.dirname(outputZipPath), { recursive: true })
 
             // Create zip archive from mergedDir
-            console.log(`[GeoTask] Writing zip to ${outputZipPath}`)
-            await new Promise<void>((resolve, reject) => {
+            console.log(`🗜️ [GeoTask] → Writing merged ZIP to: ${outputZipPath}`)
+            await new Promise<void>(async (resolve, reject) => {
                 const output = createWriteStream(outputZipPath)
                 const archive = archiver('zip', { zlib: { level: 9 } })
 
@@ -241,13 +241,22 @@ export class GeoTask {
                 archive.on('error', err => reject(err))
 
                 archive.pipe(output)
-                archive.directory(mergedDir, false)
-                archive.finalize()
+
+                try {
+                    const files = await fs.readdir(mergedDir)
+                    for (const file of files) {
+                        const fullPath = path.join(mergedDir, file)
+                        archive.file(fullPath, { name: path.basename(file) }) // flat structure
+                    }
+                    await archive.finalize()
+                } catch (err) {
+                    reject(err)
+                }
             })
 
-            console.log(`[GeoTask] Merged GTFS archives and saved to ${outputZipPath}`)
+            console.log(`✅ [GeoTask] GTFS archive successfully created at: ${outputZipPath}`)
         } catch (error) {
-            console.error('[GeoTask] Failed to merge GTFS archives for OTP:', error.message)
+            console.error(`❌ [GeoTask] Failed to merge GTFS archives for OTP: ${error.message}`)
         } finally {
             // Cleanup temp directory
             try {
