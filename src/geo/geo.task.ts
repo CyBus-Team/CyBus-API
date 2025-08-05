@@ -4,8 +4,11 @@ import { Cron } from '@nestjs/schedule'
 import { GeoService } from './geo.service'
 import * as path from 'path'
 import * as fs from 'fs/promises'
-import { createWriteStream } from 'fs'
+import * as os from 'os'
+import { createWriteStream, createReadStream } from 'fs'
 import axios from 'axios'
+import * as unzipper from 'unzipper'
+import * as archiver from 'archiver'
 
 @Injectable()
 export class GeoTask {
@@ -37,6 +40,8 @@ export class GeoTask {
             })
 
             // Step 2: Convert SHP archive to GeoJSON
+            // Replaced potential unzipper usage inside geoService with AdmZip-based extraction here if needed
+            // Assuming geoService.loadGeoDataFromZip uses AdmZip internally now, otherwise this should be updated there.
             const geojson = await this.geoService.loadGeoDataFromZip(zipPath)
 
             // Step 3: Ensure the output directory exists
@@ -146,6 +151,110 @@ export class GeoTask {
             console.log(`[GeoTask] Downloaded OSM PBF file and saved to ${osmPath}`)
         } catch (error) {
             console.error('[GeoTask] Failed to download OSM PBF file:', error.message)
+        }
+    }
+
+    @Cron(process.env.OTP_GTFS_MERGE_CRON ?? '35 3 * * 1')
+    async mergeGtfsArchivesForOtp() {
+        const urls = [
+            'https://www.motionbuscard.org.cy/opendata/downloadfile?file=GTFS\\6_google_transit.zip&rel=True',
+            'https://www.motionbuscard.org.cy/opendata/downloadfile?file=GTFS\\2_google_transit.zip&rel=True',
+            'https://www.motionbuscard.org.cy/opendata/downloadfile?file=GTFS\\4_google_transit.zip&rel=True',
+            'https://www.motionbuscard.org.cy/opendata/downloadfile?file=GTFS\\5_google_transit.zip&rel=True',
+            'https://www.motionbuscard.org.cy/opendata/downloadfile?file=GTFS\\9_google_transit.zip&rel=True',
+            'https://www.motionbuscard.org.cy/opendata/downloadfile?file=GTFS\\10_google_transit.zip&rel=True',
+            'https://www.motionbuscard.org.cy/opendata/downloadfile?file=GTFS\\11_google_transit.zip&rel=True',
+        ]
+
+        const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'gtfs-merge-'))
+        const extractDirs: string[] = []
+
+        try {
+            // Download and extract each archive
+            for (let i = 0; i < urls.length; i++) {
+                const url = urls[i]
+                const zipPath = path.join(tempDir, `gtfs${i + 1}.zip`)
+                console.log(`[GeoTask] Downloading ${url} to ${zipPath}`)
+
+                const response = await axios.get<Stream>(url, { responseType: 'stream' })
+                await new Promise<void>((resolve, reject) => {
+                    const writer = createWriteStream(zipPath)
+                    response.data.pipe(writer)
+                    writer.on('finish', () => resolve())
+                    writer.on('error', reject)
+                })
+
+                // Extract to a separate directory using unzipper
+                const extractDir = path.join(tempDir, `extracted${i + 1}`)
+                await fs.mkdir(extractDir, { recursive: true })
+                console.log(`[GeoTask] Extracting ${zipPath} to ${extractDir}`)
+                await createReadStream(zipPath).pipe(unzipper.Extract({ path: extractDir })).promise()
+                extractDirs.push(extractDir)
+            }
+
+            // Collect all GTFS filenames from first extracted dir (assuming all have same files)
+            const files = await fs.readdir(extractDirs[0])
+
+            const mergedDir = path.join(tempDir, 'merged')
+            await fs.mkdir(mergedDir)
+
+            // For each file, merge contents from all extracted dirs
+            for (const file of files) {
+                console.log(`[GeoTask] Merging ${file}`)
+                const mergedFilePath = path.join(mergedDir, file)
+                let header: string | null = null
+                let mergedLines: string[] = []
+
+                for (const dir of extractDirs) {
+                    const filePath = path.join(dir, file)
+                    try {
+                        const content = await fs.readFile(filePath, 'utf-8')
+                        const lines = content.split(/\r?\n/)
+                        if (lines.length === 0) continue
+
+                        if (header === null) {
+                            header = lines[0]
+                            mergedLines.push(header)
+                        }
+                        // Append lines except header
+                        mergedLines.push(...lines.slice(1).filter(line => line.trim() !== ''))
+                    } catch {
+                        // File might not exist in some archives, ignore
+                    }
+                }
+
+                // Write merged content to mergedDir
+                await fs.writeFile(mergedFilePath, mergedLines.join('\n'), 'utf-8')
+            }
+
+            // Create output directory if not exists
+            const outputZipPath = path.resolve(__dirname, '../../otp-data/gtfs.zip')
+            await fs.mkdir(path.dirname(outputZipPath), { recursive: true })
+
+            // Create zip archive from mergedDir
+            console.log(`[GeoTask] Writing zip to ${outputZipPath}`)
+            await new Promise<void>((resolve, reject) => {
+                const output = createWriteStream(outputZipPath)
+                const archive = archiver('zip', { zlib: { level: 9 } })
+
+                output.on('close', () => resolve())
+                archive.on('error', err => reject(err))
+
+                archive.pipe(output)
+                archive.directory(mergedDir, false)
+                archive.finalize()
+            })
+
+            console.log(`[GeoTask] Merged GTFS archives and saved to ${outputZipPath}`)
+        } catch (error) {
+            console.error('[GeoTask] Failed to merge GTFS archives for OTP:', error.message)
+        } finally {
+            // Cleanup temp directory
+            try {
+                await fs.rm(tempDir, { recursive: true, force: true })
+            } catch {
+                // ignore cleanup errors
+            }
         }
     }
 

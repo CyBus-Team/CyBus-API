@@ -10,7 +10,13 @@ async function main() {
     const geoTask = new GeoTask(geoService)
 
     try {
+        console.log('🌍 [GeoTask] ▶️ Starting downloadOsmPbf...')
         await geoTask.downloadOsmPbf()
+        console.log('🌍 [GeoTask] ✅ Finished downloadOsmPbf')
+
+        console.log('🌍 [GeoTask] ▶️ Starting mergeGtfsArchivesForOtp...')
+        await geoTask.mergeGtfsArchivesForOtp()
+        console.log('🌍 [GeoTask] ✅ Finished mergeGtfsArchivesForOtp')
 
         // Paths to GTFS zip archives
         const zipPaths = [
@@ -27,31 +33,46 @@ async function main() {
         const shapeZipPath = path.resolve(__dirname, '../data/shp/routes.zip')
 
         // GTFS data (assumes all ZIPs must be present)
-        const allGtfsExist = zipPaths.every(p => fs.existsSync(p))
-        if (allGtfsExist) {
-            await geoService.loadGtfsData(zipPaths, gtfsOutputDir)
-            console.log('✅ GTFS done')
-        } else {
-            await geoTask.downloadAndMergeGtfs()
-        }
+        console.log('🌍 [GeoTask] ▶️ Starting downloadAndMergeGtfs...')
+        await geoTask.downloadAndMergeGtfs()
+        console.log('🌍 [GeoTask] ✅ Finished downloadAndMergeGtfs')
+
+        console.log('📦 [GeoService] ▶️ Starting loadGtfsData...')
+        await geoService.loadGtfsData(zipPaths, gtfsOutputDir)
+        console.log('📦 [GeoService] ✅ Finished loadGtfsData')
+        console.log('✅ GTFS done')
 
         // Stops CSV to GeoJSON
         if (fs.existsSync(stopsCsvPath)) {
+            console.log('🗂️ [GeoService] ▶️ Starting loadGeoDataFromCsv...')
             await geoService.loadGeoDataFromCsv(stopsCsvPath)
+            console.log('🗂️ [GeoService] ✅ Finished loadGeoDataFromCsv')
             console.log('✅ Stops done')
         } else {
+            console.log('🌍 [GeoTask] ▶️ Starting downloadAndConvertStopsCsv...')
             await geoTask.downloadAndConvertStopsCsv()
+            console.log('🌍 [GeoTask] ✅ Finished downloadAndConvertStopsCsv')
+
+            console.log('🗂️ [GeoService] ▶️ Starting loadGeoDataFromCsv...')
             await geoService.loadGeoDataFromCsv(stopsCsvPath)
+            console.log('🗂️ [GeoService] ✅ Finished loadGeoDataFromCsv')
             console.log('✅ Stops done')
         }
 
         // Shapefile ZIP to GeoJSON
         if (fs.existsSync(shapeZipPath)) {
+            console.log('🗂️ [GeoService] ▶️ Starting loadGeoDataFromZip...')
             await geoService.loadGeoDataFromZip(shapeZipPath)
+            console.log('🗂️ [GeoService] ✅ Finished loadGeoDataFromZip')
             console.log('✅ Shapes done')
         } else {
+            console.log('🌍 [GeoTask] ▶️ Starting handleGeoParsing...')
             await geoTask.handleGeoParsing()
+            console.log('🌍 [GeoTask] ✅ Finished handleGeoParsing')
+
+            console.log('🗂️ [GeoService] ▶️ Starting loadGeoDataFromZip...')
             await geoService.loadGeoDataFromZip(shapeZipPath)
+            console.log('🗂️ [GeoService] ✅ Finished loadGeoDataFromZip')
             console.log('✅ Shapes done')
         }
 

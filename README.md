@@ -15,6 +15,7 @@ STOPS_PARSE_CRON="0 4 * * *" # Every day at 4 AM
 GTFS_PARSE_CRON="0 5 * * *" # Every day at 5 AM
 BUSES_PARSE_CRON="*/1 * * * *" # Every minute
 OSM_PBF_PARSE_CRON="30 3 * * 1" # Every Monday at 3:30 AM
+OTP_GTFS_MERGE_CRON="35 3 * * 1" # Every Monday at 3:35 AM
 
 # Dev DB
 POSTGRES_USER='postgres'
