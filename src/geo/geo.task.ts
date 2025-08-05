@@ -134,7 +134,7 @@ export class GeoTask {
     @Cron(process.env.OSM_PBF_PARSE_CRON ?? '30 3 * * 1')
     async downloadOsmPbf() {
         const osmUrl = 'https://download.geofabrik.de/europe/cyprus-latest.osm.pbf'
-        const osmPath = path.resolve(__dirname, '../../otp-data/data.osm.pbf')
+        const osmPath = path.resolve(__dirname, '../../data/otp/data.osm.pbf')
 
         try {
             const response = await axios.get<Stream>(osmUrl, { responseType: 'stream' })
@@ -228,7 +228,7 @@ export class GeoTask {
             }
 
             // Create output directory if not exists
-            const outputZipPath = path.resolve(__dirname, '../../otp-data/gtfs.zip')
+            const outputZipPath = path.resolve(__dirname, '../../data/otp/gtfs.zip')
             await fs.mkdir(path.dirname(outputZipPath), { recursive: true })
 
             // Create zip archive from mergedDir

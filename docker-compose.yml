@@ -27,7 +27,7 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./otp-data:/var/otp
+      - ./data/otp:/var/otp
     command: --build /var/otp --serve
     networks:
       - cybus-network
