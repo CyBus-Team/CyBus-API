@@ -21,6 +21,16 @@ services:
     networks:
       - cybus-network
     container_name: cybus-test-db
+  otp:
+    image: opentripplanner/opentripplanner:v2.4.0
+    container_name: otp
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./otp-data:/var/otp
+    command: --build /var/otp --serve
+    networks:
+      - cybus-network
 
 networks:
   cybus-network:

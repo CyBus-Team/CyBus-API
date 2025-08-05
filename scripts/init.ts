@@ -9,21 +9,23 @@ async function main() {
     const geoService = new GeoService()
     const geoTask = new GeoTask(geoService)
 
-    // Paths to GTFS zip archives
-    const zipPaths = [
-        path.resolve(__dirname, '../data/gtfs/gtfs1.zip'),
-        path.resolve(__dirname, '../data/gtfs/gtfs2.zip'),
-        path.resolve(__dirname, '../data/gtfs/gtfs3.zip'),
-        path.resolve(__dirname, '../data/gtfs/gtfs4.zip'),
-        path.resolve(__dirname, '../data/gtfs/gtfs5.zip'),
-        path.resolve(__dirname, '../data/gtfs/gtfs6.zip'),
-        path.resolve(__dirname, '../data/gtfs/gtfs7.zip'),
-    ]
-    const gtfsOutputDir = path.resolve(__dirname, '../data/gtfs')
-    const stopsCsvPath = path.resolve(__dirname, '../data/stops/stops.csv')
-    const shapeZipPath = path.resolve(__dirname, '../data/shp/routes.zip')
-
     try {
+        await geoTask.downloadOsmPbf()
+
+        // Paths to GTFS zip archives
+        const zipPaths = [
+            path.resolve(__dirname, '../data/gtfs/gtfs1.zip'),
+            path.resolve(__dirname, '../data/gtfs/gtfs2.zip'),
+            path.resolve(__dirname, '../data/gtfs/gtfs3.zip'),
+            path.resolve(__dirname, '../data/gtfs/gtfs4.zip'),
+            path.resolve(__dirname, '../data/gtfs/gtfs5.zip'),
+            path.resolve(__dirname, '../data/gtfs/gtfs6.zip'),
+            path.resolve(__dirname, '../data/gtfs/gtfs7.zip'),
+        ]
+        const gtfsOutputDir = path.resolve(__dirname, '../data/gtfs')
+        const stopsCsvPath = path.resolve(__dirname, '../data/stops/stops.csv')
+        const shapeZipPath = path.resolve(__dirname, '../data/shp/routes.zip')
+
         // GTFS data (assumes all ZIPs must be present)
         const allGtfsExist = zipPaths.every(p => fs.existsSync(p))
         if (allGtfsExist) {

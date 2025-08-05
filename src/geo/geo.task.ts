@@ -85,8 +85,7 @@ export class GeoTask {
         }
     }
     // Cron job to fetch GTFS ZIP archives and process them (default: every 5 minutes)
-    // @Cron(process.env.GTFS_PARSE_CRON ?? '0 5 * * *')
-    @Cron('*/5 * * * *')
+    @Cron(process.env.GTFS_PARSE_CRON ?? '0 5 * * *')
     async downloadAndMergeGtfs() {
         const urls = [
             'https://www.motionbuscard.org.cy/opendata/downloadfile?file=GTFS\\6_google_transit.zip&rel=True',
@@ -125,4 +124,29 @@ export class GeoTask {
             console.error('[GeoTask] Failed to process GTFS archives:', gtfsError.message)
         }
     }
+
+    // Cron job to download Cyprus OSM PBF file weekly (default: Monday 3:30 AM)
+    @Cron(process.env.OSM_PBF_PARSE_CRON ?? '30 3 * * 1')
+    async downloadOsmPbf() {
+        const osmUrl = 'https://download.geofabrik.de/europe/cyprus-latest.osm.pbf'
+        const osmPath = path.resolve(__dirname, '../../otp-data/data.osm.pbf')
+
+        try {
+            const response = await axios.get<Stream>(osmUrl, { responseType: 'stream' })
+            await fs.mkdir(path.dirname(osmPath), { recursive: true })
+            const writer = createWriteStream(osmPath)
+
+            response.data.pipe(writer)
+
+            await new Promise<void>((resolve, reject) => {
+                writer.on('finish', () => resolve(undefined))
+                writer.on('error', reject)
+            })
+
+            console.log(`[GeoTask] Downloaded OSM PBF file and saved to ${osmPath}`)
+        } catch (error) {
+            console.error('[GeoTask] Failed to download OSM PBF file:', error.message)
+        }
+    }
+
 }

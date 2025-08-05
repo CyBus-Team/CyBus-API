@@ -14,6 +14,7 @@ ROUTES_PARSE_CRON="0 3 * * *" # Every day at 3 AM
 STOPS_PARSE_CRON="0 4 * * *" # Every day at 4 AM
 GTFS_PARSE_CRON="0 5 * * *" # Every day at 5 AM
 BUSES_PARSE_CRON="*/1 * * * *" # Every minute
+OSM_PBF_PARSE_CRON="30 3 * * 1" # Every Monday at 3:30 AM
 
 # Dev DB
 POSTGRES_USER='postgres'
@@ -27,7 +28,6 @@ POSTGRES_TEST_DB='cybus_test'
 
 # Connection URL
 DATABASE_URL='postgresql://postgres:123@localhost:5434/cybus?schema=public'
-JWT_SECRET='123'
 ```
 
 ### Example `.env.test`
@@ -35,7 +35,6 @@ JWT_SECRET='123'
 ```dotenv
 # E2E Connection URL
 DATABASE_URL="postgresql://cybus_test_user:123@localhost:5435/cybus_test?schema=public"
-JWT_SECRET='123'
 ```
 
 ## Project setup
