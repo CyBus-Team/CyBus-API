@@ -217,7 +217,19 @@ export class GeoTask {
                             mergedLines.push(header)
                         }
                         // Append lines except header
-                        mergedLines.push(...lines.slice(1).filter(line => line.trim() !== ''))
+                        if (file === 'fare_attributes.txt') {
+                            const seenIds = new Set<string>()
+                            for (const line of lines.slice(1)) {
+                                const parts = line.split(',')
+                                const fareId = parts[0]?.trim()
+                                if (fareId && !seenIds.has(fareId)) {
+                                    seenIds.add(fareId)
+                                    mergedLines.push(line)
+                                }
+                            }
+                        } else {
+                            mergedLines.push(...lines.slice(1).filter(line => line.trim() !== ''))
+                        }
                     } catch {
                         // File might not exist in some archives, ignore
                     }
