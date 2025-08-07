@@ -209,7 +209,10 @@ export class GeoTask {
                     const filePath = path.join(dir, file)
                     try {
                         const content = await fs.readFile(filePath, 'utf-8')
-                        const lines = content.split(/\r?\n/)
+                        const normalized = content.replace(/^\uFEFF/, '') // remove BOM if present
+                        const sanitized = normalized.split(/\r?\n/).filter(line => line.trim().length > 0)
+                        const lines = sanitized
+                        lines[0] = lines[0].replace(/^\uFEFF/, '') // Ensure BOM is removed from header too
                         if (lines.length === 0) continue
 
                         if (header === null) {
@@ -218,16 +221,84 @@ export class GeoTask {
                         }
                         // Append lines except header
                         if (file === 'fare_attributes.txt') {
-                            const seenIds = new Set<string>()
+                            if (!globalThis.__seenFareIds) {
+                                globalThis.__seenFareIds = new Set<string>()
+                            }
+                            const seenFareIds = globalThis.__seenFareIds
                             for (const line of lines.slice(1)) {
                                 const parts = line.split(',')
                                 const fareId = parts[0]?.trim()
-                                if (fareId && !seenIds.has(fareId)) {
-                                    seenIds.add(fareId)
-                                    mergedLines.push(line)
+
+                                if (!fareId || seenFareIds.has(fareId)) {
+                                    if (fareId) {
+                                        console.warn(`[GeoTask] Skipping duplicate fare_id: ${fareId}`)
+                                    }
+                                    continue
                                 }
+
+                                seenFareIds.add(fareId)
+                                mergedLines.push(line)
                             }
-                        } else {
+                        }
+                        else if (file === 'stops.txt') {
+                            if (!globalThis.__seenStopIds) {
+                                globalThis.__seenStopIds = new Set<string>()
+                            }
+                            const seenStopIds = globalThis.__seenStopIds
+                            for (const line of lines.slice(1)) {
+                                const parts = line.split(',')
+                                const stopId = parts[0]?.trim()
+
+                                if (!stopId || seenStopIds.has(stopId)) {
+                                    if (stopId) {
+                                        console.warn(`[GeoTask] Skipping duplicate stop_id: ${stopId}`)
+                                    }
+                                    continue
+                                }
+
+                                seenStopIds.add(stopId)
+                                mergedLines.push(line)
+                            }
+                        }
+                        else if (file === 'trips.txt') {
+                            if (!globalThis.__seenTripIds) {
+                                globalThis.__seenTripIds = new Set<string>()
+                            }
+                            const seenTripIds = globalThis.__seenTripIds
+                            for (const line of lines.slice(1)) {
+                                const parts = line.split(',')
+                                const tripId = parts[2]?.trim() // index 2 based on GTFS spec: route_id,service_id,trip_id,...
+
+                                if (!tripId || seenTripIds.has(tripId)) {
+                                    if (tripId) {
+                                        console.warn(`[GeoTask] Skipping duplicate trip_id: ${tripId}`)
+                                    }
+                                    continue
+                                }
+
+                                seenTripIds.add(tripId)
+                                mergedLines.push(line)
+                            }
+                        }
+                        else if (file === 'agency.txt') {
+                            if (!globalThis.__seenAgencyIds) {
+                                globalThis.__seenAgencyIds = new Set<string>()
+                            }
+                            const seenAgencyIds = globalThis.__seenAgencyIds
+                            for (const line of lines.slice(1)) {
+                                const parts = line.split(',')
+                                const agencyId = parts[0]?.trim()
+                                if (!agencyId || seenAgencyIds.has(agencyId)) {
+                                    if (agencyId) {
+                                        console.warn(`[GeoTask] Skipping duplicate agency_id: ${agencyId}`)
+                                    }
+                                    continue
+                                }
+                                seenAgencyIds.add(agencyId)
+                                mergedLines.push(line)
+                            }
+                        }
+                        else {
                             mergedLines.push(...lines.slice(1).filter(line => line.trim() !== ''))
                         }
                     } catch {
