@@ -14,8 +14,8 @@ import * as archiver from 'archiver'
 export class GeoTask {
     constructor(private readonly geoService: GeoService) { }
 
-    // Cron job to fetch and convert SHP archive to GeoJSON (default: daily at 3 AM)
-    @Cron(process.env.ROUTES_PARSE_CRON ?? '0 3 * * *')
+    // Cron job to fetch and convert SHP archive to GeoJSON (default: monthly at 12 PM Cyprus time)
+    @Cron(process.env.ROUTES_PARSE_CRON ?? '0 9 1 * *')
     async handleGeoParsing() {
         const zipUrl = 'https://motionbuscard.org.cy/opendata/downloadfile'
         const zipPath = path.resolve(__dirname, '../../data/shp/routes.zip')
@@ -57,8 +57,8 @@ export class GeoTask {
     }
 
 
-    // Cron job to fetch and convert CSV stops file to GeoJSON (default: daily at 4 AM)
-    @Cron(process.env.STOPS_PARSE_CRON ?? '0 4 * * *')
+    // Cron job to fetch and convert CSV stops file to GeoJSON (default: monthly at 12 PM Cyprus time)
+    @Cron(process.env.STOPS_PARSE_CRON ?? '0 9 1 * *')
     async downloadAndConvertStopsCsv() {
         const csvUrl = 'https://motionbuscard.org.cy/opendata/downloadfile'
         const csvPath = path.resolve(__dirname, '../../data/stops/stops.csv')
@@ -89,8 +89,8 @@ export class GeoTask {
             console.error('[GeoTask] Failed to process stops CSV:', csvError.message)
         }
     }
-    // Cron job to fetch GTFS ZIP archives and process them (default: every 5 minutes)
-    @Cron(process.env.GTFS_PARSE_CRON ?? '0 5 * * *')
+    // Cron job to fetch GTFS ZIP archives and process them (default: monthly at 12 PM Cyprus time)
+    @Cron(process.env.GTFS_PARSE_CRON ?? '0 9 1 * *')
     async downloadAndMergeGtfs() {
         const urls = [
             'https://www.motionbuscard.org.cy/opendata/downloadfile?file=GTFS\\6_google_transit.zip&rel=True',
@@ -130,8 +130,8 @@ export class GeoTask {
         }
     }
 
-    // Cron job to download Cyprus OSM PBF file weekly (default: Monday 3:30 AM)
-    @Cron(process.env.OSM_PBF_PARSE_CRON ?? '30 3 * * 1')
+    // Cron job to download Cyprus OSM PBF file (default: monthly at 12 PM Cyprus time)
+    @Cron(process.env.OSM_PBF_PARSE_CRON ?? '0 9 1 * *')
     async downloadOsmPbf() {
         const osmUrl = 'https://download.geofabrik.de/europe/cyprus-latest.osm.pbf'
         const osmPath = path.resolve(__dirname, '../../data/otp/data.osm.pbf')
@@ -154,7 +154,8 @@ export class GeoTask {
         }
     }
 
-    @Cron(process.env.OTP_GTFS_MERGE_CRON ?? '35 3 * * 1')
+    // Cron job to merge GTFS archives for OTP (default: monthly at 12 PM Cyprus time)
+    @Cron(process.env.OTP_GTFS_MERGE_CRON ?? '0 9 1 * *')
     async mergeGtfsArchivesForOtp() {
         const urls = [
             'https://www.motionbuscard.org.cy/opendata/downloadfile?file=GTFS\\6_google_transit.zip&rel=True',
@@ -277,6 +278,24 @@ export class GeoTask {
                                 }
 
                                 seenTripIds.add(tripId)
+                                mergedLines.push(line)
+                            }
+                        }
+                        // Insert calendar_dates.txt handling after trips.txt and before agency.txt
+                        else if (file === 'calendar_dates.txt') {
+                            if (!globalThis.__seenCalendarDates) {
+                                globalThis.__seenCalendarDates = new Set<string>()
+                            }
+                            const seenCalendarDates = globalThis.__seenCalendarDates
+                            for (const line of lines.slice(1)) {
+                                const key = line.trim()
+                                if (!key || seenCalendarDates.has(key)) {
+                                    if (key) {
+                                        console.warn(`[GeoTask] Skipping duplicate calendar_date entry: ${key}`)
+                                    }
+                                    continue
+                                }
+                                seenCalendarDates.add(key)
                                 mergedLines.push(line)
                             }
                         }

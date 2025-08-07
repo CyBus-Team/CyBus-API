@@ -9,13 +9,13 @@ Environments are configured using `.env` and `.env.test` files.
 
 ```dotenv
 # General settings
-AUTOCOMPLETE_USER_AGENT='CyBusAPI/1.0 (autocompletion service)'
-ROUTES_PARSE_CRON="0 3 * * *" # Every day at 3 AM
-STOPS_PARSE_CRON="0 4 * * *" # Every day at 4 AM
-GTFS_PARSE_CRON="0 5 * * *" # Every day at 5 AM
+AUTOCOMPLETE_USER_AGENT='CyBusAPI/1.0 (test@gmail.com)'
+ROUTES_PARSE_CRON="0 9 1 * *" # Monthly on the 1st at 12:00 PM Cyprus time
+STOPS_PARSE_CRON="0 9 1 * *"  # Monthly on the 1st at 12:00 PM Cyprus time
+GTFS_PARSE_CRON="0 9 1 * *"   # Monthly on the 1st at 12:00 PM Cyprus time
 BUSES_PARSE_CRON="*/1 * * * *" # Every minute
-OSM_PBF_PARSE_CRON="30 3 * * 1" # Every Monday at 3:30 AM
-OTP_GTFS_MERGE_CRON="35 3 * * 1" # Every Monday at 3:35 AM
+OSM_PBF_PARSE_CRON="0 9 1 * *" # Monthly on the 1st at 12:00 PM Cyprus time
+OTP_GTFS_MERGE_CRON="0 9 1 * *" # Monthly on the 1st at 12:00 PM Cyprus time
 
 # Dev DB
 POSTGRES_USER='postgres'
