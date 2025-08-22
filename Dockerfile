@@ -66,7 +66,7 @@ RUN printf '\
     user=root\n\
     \n\
     [program:nest]\n\
-    command=/bin/sh -lc '\''exec node /app/dist/main.js || exec node /app/dist/src/main.js'\''\n\
+    command=/bin/sh -lc '\''if [ -f /app/dist/main.js ]; then exec node /app/dist/main.js; elif [ -f /app/dist/src/main.js ]; then exec node /app/dist/src/main.js; else echo "No Nest entrypoint in /app/dist"; ls -la /app/dist || true; exit 1; fi'\''\n\
     environment=PORT=%s\n\
     stdout_logfile=/dev/fd/1\n\
     stderr_logfile=/dev/fd/2\n\
@@ -74,7 +74,7 @@ RUN printf '\
     \n\
     [program:otp]\n\
     directory=/var/opentripplanner\n\
-    command=/bin/sh -lc '\''exec /usr/bin/java -Xmx2G -cp /opt/otpapp/resources:/opt/otpapp/classes:/opt/otpapp/libs/* org.opentripplanner.standalone.OTPMain --build --save --serve'\''\n\
+    command=/bin/sh -lc '\''exec /usr/bin/java -Xmx512m -cp /opt/otpapp/resources:/opt/otpapp/classes:/opt/otpapp/libs/* org.opentripplanner.standalone.OTPMain /var/opentripplanner --build --save --serve'\''\n\
     stdout_logfile=/dev/fd/1\n\
     stderr_logfile=/dev/fd/2\n\
     autorestart=true\n\
