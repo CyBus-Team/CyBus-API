@@ -37,7 +37,8 @@ COPY --from=build /app/data ./data
 # 2) OTP JAR
 # This digest corresponds to OpenTripPlanner 2.8.0-SNAPSHOT (commit 27cb855..., build 2025-07-27), to match the docker-compose pin.
 RUN mkdir -p /opt/otp /var/opentripplanner
-COPY --from=otpimage /opt/otp/*.jar /opt/otp/
+# OTP image uses Jib layout (no single shaded JAR): /app/{resources,classes,libs}
+COPY --from=otpimage /app /opt/otpapp
 
 # If init.ts creates data for OTP — they are already in /app/data
 # They can be mounted into the OTP directory:
@@ -73,7 +74,7 @@ RUN printf '\
     \n\
     [program:otp]\n\
     directory=/var/opentripplanner\n\
-    command=/bin/sh -lc '\''exec /usr/bin/java -Xmx2G -jar /opt/otp/*.jar --build --save --serve'\''\n\
+    command=/bin/sh -lc '\''exec /usr/bin/java -Xmx2G -cp /opt/otpapp/resources:/opt/otpapp/classes:/opt/otpapp/libs/* org.opentripplanner.standalone.OTPMain --build --save --serve'\''\n\
     stdout_logfile=/dev/fd/1\n\
     stderr_logfile=/dev/fd/2\n\
     autorestart=true\n\
