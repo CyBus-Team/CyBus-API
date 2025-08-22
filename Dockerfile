@@ -1,12 +1,12 @@
 # ---- Base with Node + Java + tools ------------------------------------------
-FROM alpine:3.19 AS base
-RUN apk add --no-cache nodejs npm openjdk17-jre caddy supervisor bash curl
+FROM node:20-alpine AS base
+RUN apk add --no-cache openjdk17-jre caddy supervisor bash curl
 
 # ---- Build NestJS ------------------------------------------------------------
 FROM base AS build
 WORKDIR /app
-COPY package*.json ./
-RUN npm ci
+COPY package.json package-lock.json* ./
+RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
 COPY . .
 
 # Generate files before build
@@ -29,7 +29,7 @@ ENV PORT=8000
 
 # 1) NestJS artifacts
 COPY --from=build /app/package*.json ./
-RUN npm ci --omit=dev
+RUN if [ -f package-lock.json ]; then npm ci --omit=dev; else npm install --omit=dev; fi
 COPY --from=build /app/dist ./dist
 # Generated files from scripts/init.ts (e.g., /data)
 COPY --from=build /app/data ./data
@@ -41,7 +41,7 @@ COPY --from=otpimage /opt/otp/otp.jar /opt/otp/otp.jar
 
 # If init.ts creates data for OTP — they are already in /app/data
 # They can be mounted into the OTP directory:
-RUN ln -s /app/data/otp /var/opentripplanner
+RUN [ -d /app/data/otp ] && ln -s /app/data/otp /var/opentripplanner || true
 
 # 3) Caddy config
 RUN mkdir -p /etc/caddy
@@ -65,7 +65,7 @@ RUN printf '\
     user=root\n\
     \n\
     [program:nest]\n\
-    command=/usr/bin/node /app/dist/main.js\n\
+    command=/usr/local/bin/node /app/dist/main.js\n\
     environment=PORT=%s\n\
     stdout_logfile=/dev/fd/1\n\
     stderr_logfile=/dev/fd/2\n\
