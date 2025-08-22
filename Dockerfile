@@ -83,11 +83,13 @@ RUN printf '\
     fi; \
     echo "📦 Prisma will use DATABASE_URL=${DATABASE_URL:-<not-set>}"; \
     npx prisma migrate deploy --schema=prisma/schema.prisma || npx prisma db push --schema=prisma/schema.prisma; \
-    exec node dist/main.js || exec node dist/src/main.js'\''\n\
+    [ -f dist/main.js ] && exec node dist/main.js || exec node dist/src/main.js'\''\n\
     environment=PORT=%s\n\
-    stdout_logfile=/dev/fd/1\n\
-    stderr_logfile=/dev/fd/2\n\
-    autorestart=true\n\
+    stdout_logfile=/dev/stdout\n\
+    stdout_logfile_maxbytes=0\n\
+    stderr_logfile=/dev/stderr\n\
+    stderr_logfile_maxbytes=0\n\
+    autorestart=false\n\
     \n\
     [program:otp]\n\
     directory=/var/opentripplanner\n\
@@ -97,16 +99,20 @@ RUN printf '\
     org.opentripplanner.standalone.OTPMain \
     /var/opentripplanner --build --save --serve'\''\n\
     environment=OTP_PORT=%s\n\
-    stdout_logfile=/dev/fd/1\n\
-    stderr_logfile=/dev/fd/2\n\
+    stdout_logfile=/dev/stdout\n\
+    stdout_logfile_maxbytes=0\n\
+    stderr_logfile=/dev/stderr\n\
+    stderr_logfile_maxbytes=0\n\
     autostart=false\n\
     autorestart=false\n\
     \n\
     [program:caddy]\n\
     command=caddy run --config /etc/caddy/Caddyfile --adapter caddyfile\n\
-    stdout_logfile=/dev/fd/1\n\
-    stderr_logfile=/dev/fd/2\n\
-    autorestart=true\n' "$NEST_PORT" "$OTP_PORT" > /etc/supervisord.conf
+    stdout_logfile=/dev/stdout\n\
+    stdout_logfile_maxbytes=0\n\
+    stderr_logfile=/dev/stderr\n\
+    stderr_logfile_maxbytes=0\n\
+    autorestart=false\n' "$NEST_PORT" "$OTP_PORT" > /etc/supervisord.conf
 
 EXPOSE 8000
 CMD ["/usr/bin/supervisord","-c","/etc/supervisord.conf"]
