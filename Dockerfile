@@ -29,7 +29,9 @@ ENV PORT=8000
 
 # 1) NestJS artifacts
 COPY --from=build /app/package*.json ./
+COPY --from=build /app/prisma ./prisma
 RUN if [ -f package-lock.json ]; then npm ci --omit=dev; else npm install --omit=dev; fi
+RUN npx --yes prisma generate
 COPY --from=build /app/dist ./dist
 # Generated files from scripts/init.ts (e.g., /data)
 COPY --from=build /app/data ./data
@@ -66,7 +68,7 @@ RUN printf '\
     user=root\n\
     \n\
     [program:nest]\n\
-    command=/bin/sh -lc '\''if [ -f /app/dist/main.js ]; then exec node /app/dist/main.js; elif [ -f /app/dist/src/main.js ]; then exec node /app/dist/src/main.js; else echo "No Nest entrypoint in /app/dist"; ls -la /app/dist || true; exit 1; fi'\''\n\
+    command=/bin/sh -lc '\''npx prisma migrate deploy --schema=/app/prisma/schema.prisma || npx prisma db push --schema=/app/prisma/schema.prisma; exec node /app/dist/main.js || exec node /app/dist/src/main.js'\''\n\
     environment=PORT=%s\n\
     stdout_logfile=/dev/fd/1\n\
     stderr_logfile=/dev/fd/2\n\
@@ -74,10 +76,11 @@ RUN printf '\
     \n\
     [program:otp]\n\
     directory=/var/opentripplanner\n\
-    command=/bin/sh -lc '\''exec /usr/bin/java -Xmx512m -cp /opt/otpapp/resources:/opt/otpapp/classes:/opt/otpapp/libs/* org.opentripplanner.standalone.OTPMain /var/opentripplanner --build --save --serve'\''\n\
+    command=/bin/sh -lc '\''exec /usr/bin/java -Xmx2G -cp /opt/otpapp/resources:/opt/otpapp/classes:/opt/otpapp/libs/* org.opentripplanner.standalone.OTPMain --build --save --serve /var/opentripplanner'\''\n\
     stdout_logfile=/dev/fd/1\n\
     stderr_logfile=/dev/fd/2\n\
-    autorestart=true\n\
+    autostart=false\n\
+    autorestart=false\n\
     \n\
     [program:caddy]\n\
     command=caddy run --config /etc/caddy/Caddyfile --adapter caddyfile\n\
