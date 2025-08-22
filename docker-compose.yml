@@ -22,7 +22,8 @@ services:
       - cybus-network
     container_name: cybus-test-db
   otp:
-    image: docker.io/opentripplanner/opentripplanner:latest
+    # Digest corresponds to OpenTripPlanner version 2.8.0-SNAPSHOT (commit 27cb855..., build 2025-07-27)
+    image: docker.io/opentripplanner/opentripplanner@sha256:2ac19ae5746cf1962c2611823f57803d2d928dbef4b2b7ead7d485fac40c4f67
     container_name: otp
     ports:
       - "8080:8080"
