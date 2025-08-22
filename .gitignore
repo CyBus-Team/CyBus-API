@@ -5,6 +5,7 @@ data/stops/*
 data/shp/*
 data/geojson/*
 data/gtfs/*
+data/otp/*
 
 # compiled output
 /dist

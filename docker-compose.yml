@@ -21,6 +21,16 @@ services:
     networks:
       - cybus-network
     container_name: cybus-test-db
+  otp:
+    image: docker.io/opentripplanner/opentripplanner:latest
+    container_name: otp
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data/otp:/var/opentripplanner
+    command: --build --save --serve
+    networks:
+      - cybus-network
 
 networks:
   cybus-network:

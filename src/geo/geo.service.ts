@@ -21,6 +21,7 @@ export class GeoService {
      * Expects the ZIP to contain SHP/DBF files required for shapefile parsing.
      */
     async loadGeoDataFromZip(zipPath: string) {
+        console.log('📦 [GeoService] ▶️ loadGeoDataFromZip');
         if (!fs.existsSync(zipPath)) {
             throw new Error(`File not found at path: ${zipPath}`)
         }
@@ -35,6 +36,7 @@ export class GeoService {
      * The CSV is expected to contain `lat` and `lon` fields, using commas as decimal separators.
      */
     async loadGeoDataFromCsv(csvPath: string) {
+        console.log('📄 [GeoService] ▶️ loadGeoDataFromCsv');
         if (!fs.existsSync(csvPath)) {
             throw new Error(`File not found at path: ${csvPath}`)
         }
@@ -43,7 +45,7 @@ export class GeoService {
         const records = parse(content, {
             columns: true,
             skip_empty_lines: true,
-            delimiter: ';',
+            delimiter: ';', // Fix: Explicitly specify semicolon delimiter
         }) as StopCsvRow[]
 
         const features = records.flatMap((row) => {
@@ -76,6 +78,7 @@ export class GeoService {
      * to the specified output directory.
      */
     async loadGtfsData(zipPaths: string[], outputDir: string) {
+        console.log('🗂️ [GeoService] ▶️ loadGtfsData');
         if (!Array.isArray(zipPaths)) {
             throw new Error('Expected zipPaths to be an array of strings')
         }
@@ -84,10 +87,30 @@ export class GeoService {
         const allRecordsMap = new Map<string, any[]>()
 
         for (const zipPath of zipPaths) {
-            const directory = await unzipper.Open.file(zipPath)
+            if (!fs.existsSync(zipPath)) {
+                console.error(`  ❌ [GeoService] File not found: ${zipPath}`);
+                continue;
+            }
+            const stat = await fs.promises.stat(zipPath);
+            console.log(`  📏 [GeoService] Zip file size for ${zipPath}: ${stat.size} bytes`);
+            if (stat.size === 0) {
+                console.error(`  ⚠️ [GeoService] Skipping empty zip file: ${zipPath}`);
+                continue;
+            }
+
+            console.log(`  📂 [GeoService] Opening zip file: ${zipPath}`);
+            let directory;
+            try {
+                directory = await unzipper.Open.file(zipPath);
+            } catch (err) {
+                console.error(`  ❌ [GeoService] Failed to open zip: ${zipPath}`, err);
+                continue;
+            }
+            console.log(`    📑 [GeoService] Opened zip file: ${zipPath}, found ${directory.files.length} files`);
             for (const fileEntry of directory.files) {
                 if (!fileEntry.path.endsWith('.txt')) continue
 
+                console.log(`    📄 [GeoService] Reading file from zip: ${fileEntry.path}`);
                 const content = await fileEntry.buffer()
                 const records = parse(content.toString('utf-8').replace(/^\uFEFF/, ''), {
                     columns: true,
@@ -115,7 +138,7 @@ export class GeoService {
             await fs.promises.writeFile(filePath, JSON.stringify(records, null, 2), 'utf-8')
         }
 
-        console.log(`[GeoService] Finished processing GTFS files into ${outputDir}`)
+        console.log(`✅ [GeoService] Finished processing GTFS files into ${outputDir}`)
     }
 
 }

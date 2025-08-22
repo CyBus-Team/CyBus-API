@@ -9,11 +9,14 @@ Environments are configured using `.env` and `.env.test` files.
 
 ```dotenv
 # General settings
-AUTOCOMPLETE_USER_AGENT='CyBusAPI/1.0 (autocompletion service)'
-ROUTES_PARSE_CRON="0 3 * * *" # Every day at 3 AM
-STOPS_PARSE_CRON="0 4 * * *" # Every day at 4 AM
-GTFS_PARSE_CRON="0 5 * * *" # Every day at 5 AM
+AUTOCOMPLETE_USER_AGENT='CyBusAPI/1.0 (test@gmail.com)'
+ROUTES_PARSE_CRON="0 9 1 * *" # Monthly on the 1st at 12:00 PM Cyprus time
+STOPS_PARSE_CRON="0 9 1 * *"  # Monthly on the 1st at 12:00 PM Cyprus time
+GTFS_PARSE_CRON="0 9 1 * *"   # Monthly on the 1st at 12:00 PM Cyprus time
 BUSES_PARSE_CRON="*/1 * * * *" # Every minute
+OSM_PBF_PARSE_CRON="0 9 1 * *" # Monthly on the 1st at 12:00 PM Cyprus time
+OTP_GTFS_MERGE_CRON="0 9 1 * *" # Monthly on the 1st at 12:00 PM Cyprus time
+OTP_BASE_URL='http://localhost:8080' # Base URL for OTP GraphQL API
 
 # Dev DB
 POSTGRES_USER='postgres'
@@ -27,7 +30,6 @@ POSTGRES_TEST_DB='cybus_test'
 
 # Connection URL
 DATABASE_URL='postgresql://postgres:123@localhost:5434/cybus?schema=public'
-JWT_SECRET='123'
 ```
 
 ### Example `.env.test`
@@ -35,7 +37,6 @@ JWT_SECRET='123'
 ```dotenv
 # E2E Connection URL
 DATABASE_URL="postgresql://cybus_test_user:123@localhost:5435/cybus_test?schema=public"
-JWT_SECRET='123'
 ```
 
 ## Project setup
