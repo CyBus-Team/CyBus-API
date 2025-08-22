@@ -26,6 +26,13 @@ ENV NODE_ENV=production
 ENV NEST_PORT=8001
 ENV OTP_PORT=8080
 ENV PORT=8000
+# Optional DB pieces (can be provided by the platform). If DATABASE_URL is set, it takes precedence.
+ENV POSTGRES_HOST="" \
+    POSTGRES_PORT=5432 \
+    POSTGRES_USER="" \
+    POSTGRES_PASSWORD="" \
+    POSTGRES_DB="" \
+    DATABASE_URL=""
 
 # 1) NestJS artifacts
 COPY --from=build /app/package*.json ./
@@ -68,7 +75,15 @@ RUN printf '\
     user=root\n\
     \n\
     [program:nest]\n\
-    command=/bin/sh -lc '\''npx prisma migrate deploy --schema=/app/prisma/schema.prisma || npx prisma db push --schema=/app/prisma/schema.prisma; exec node /app/dist/main.js || exec node /app/dist/src/main.js'\''\n\
+    command=/bin/sh -lc '\''\
+    # Compose DATABASE_URL at runtime if not provided; prefer full URL when present\n\
+    : "${POSTGRES_PORT:=5432}"; \
+    if [ -z "${DATABASE_URL}" ] && [ -n "${POSTGRES_HOST}" ] && [ -n "${POSTGRES_USER}" ] && [ -n "${POSTGRES_PASSWORD}" ] && [ -n "${POSTGRES_DB}" ]; then \
+    export DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}?schema=public"; \
+    fi; \
+    echo "📦 Prisma will use DATABASE_URL=${DATABASE_URL:-<not-set>}"; \
+    npx prisma migrate deploy --schema=prisma/schema.prisma || npx prisma db push --schema=prisma/schema.prisma; \
+    exec node dist/main.js || exec node dist/src/main.js'\''\n\
     environment=PORT=%s\n\
     stdout_logfile=/dev/fd/1\n\
     stderr_logfile=/dev/fd/2\n\
@@ -76,7 +91,12 @@ RUN printf '\
     \n\
     [program:otp]\n\
     directory=/var/opentripplanner\n\
-    command=/bin/sh -lc '\''exec /usr/bin/java -Xmx2G -cp /opt/otpapp/resources:/opt/otpapp/classes:/opt/otpapp/libs/* org.opentripplanner.standalone.OTPMain --build --save --serve /var/opentripplanner'\''\n\
+    command=/bin/sh -lc '\''\
+    exec /usr/bin/java -Xmx2G \
+    -cp /opt/otpapp/resources:/opt/otpapp/classes:/opt/otpapp/libs/* \
+    org.opentripplanner.standalone.OTPMain \
+    /var/opentripplanner --build --save --serve'\''\n\
+    environment=OTP_PORT=%s\n\
     stdout_logfile=/dev/fd/1\n\
     stderr_logfile=/dev/fd/2\n\
     autostart=false\n\
@@ -86,7 +106,7 @@ RUN printf '\
     command=caddy run --config /etc/caddy/Caddyfile --adapter caddyfile\n\
     stdout_logfile=/dev/fd/1\n\
     stderr_logfile=/dev/fd/2\n\
-    autorestart=true\n' "$NEST_PORT" > /etc/supervisord.conf
+    autorestart=true\n' "$NEST_PORT" "$OTP_PORT" > /etc/supervisord.conf
 
 EXPOSE 8000
 CMD ["/usr/bin/supervisord","-c","/etc/supervisord.conf"]
