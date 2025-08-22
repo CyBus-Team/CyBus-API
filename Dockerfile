@@ -83,7 +83,16 @@ RUN printf '\
     fi; \
     echo "📦 Prisma will use DATABASE_URL=${DATABASE_URL:-<not-set>}"; \
     npx prisma migrate deploy --schema=prisma/schema.prisma || npx prisma db push --schema=prisma/schema.prisma; \
-    [ -f dist/main.js ] && exec node dist/main.js || exec node dist/src/main.js'\''\n\
+    \
+    # Detect compiled Nest entrypoint robustly\n    TARGET=""; \
+    for f in dist/main.js dist/src/main.js dist/apps/*/main.js; do \
+    if [ -f "$f" ]; then TARGET="$f"; break; fi \
+    done; \
+    if [ -z "$TARGET" ]; then \
+    echo "❌ No compiled entrypoint found under ./dist"; ls -R dist || true; exit 1; \
+    fi; \
+    echo "▶️  Starting NestJS: $TARGET"; \
+    exec node "$TARGET"'\''\n\
     environment=PORT=%s\n\
     stdout_logfile=/dev/stdout\n\
     stdout_logfile_maxbytes=0\n\
