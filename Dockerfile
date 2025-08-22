@@ -1,6 +1,6 @@
 # ---- Base with Node + Java + tools ------------------------------------------
 FROM node:20-alpine AS base
-RUN apk add --no-cache openjdk17-jre caddy supervisor bash curl
+RUN apk add --no-cache openjdk21-jre-headless caddy supervisor bash curl
 
 # ---- Build NestJS ------------------------------------------------------------
 FROM base AS build
@@ -66,7 +66,7 @@ RUN printf '\
     user=root\n\
     \n\
     [program:nest]\n\
-    command=/usr/local/bin/node /app/dist/main.js\n\
+    command=/bin/sh -lc '\''exec node /app/dist/main.js || exec node /app/dist/src/main.js'\''\n\
     environment=PORT=%s\n\
     stdout_logfile=/dev/fd/1\n\
     stderr_logfile=/dev/fd/2\n\
@@ -80,7 +80,7 @@ RUN printf '\
     autorestart=true\n\
     \n\
     [program:caddy]\n\
-    command=/usr/bin/caddy run --config /etc/caddy/Caddyfile --adapter caddyfile\n\
+    command=caddy run --config /etc/caddy/Caddyfile --adapter caddyfile\n\
     stdout_logfile=/dev/fd/1\n\
     stderr_logfile=/dev/fd/2\n\
     autorestart=true\n' "$NEST_PORT" > /etc/supervisord.conf
