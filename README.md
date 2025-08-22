@@ -16,6 +16,7 @@ GTFS_PARSE_CRON="0 9 1 * *"   # Monthly on the 1st at 12:00 PM Cyprus time
 BUSES_PARSE_CRON="*/1 * * * *" # Every minute
 OSM_PBF_PARSE_CRON="0 9 1 * *" # Monthly on the 1st at 12:00 PM Cyprus time
 OTP_GTFS_MERGE_CRON="0 9 1 * *" # Monthly on the 1st at 12:00 PM Cyprus time
+OTP_BASE_URL='http://localhost:8080' # Base URL for OTP GraphQL API
 
 # Dev DB
 POSTGRES_USER='postgres'
