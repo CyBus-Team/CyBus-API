@@ -125,6 +125,8 @@ RUN printf '\
     stdout_logfile_maxbytes=0\n\
     stderr_logfile=/dev/stderr\n\
     stderr_logfile_maxbytes=0\n\
+    autostart=true\n\
+    autorestart=true\n\
     startsecs=20\n\
     \n\
     [program:caddy]\n\
