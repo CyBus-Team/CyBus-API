@@ -21,6 +21,8 @@ export class GeoTask {
         const zipPath = path.resolve(__dirname, '../../data/shp/routes.zip')
         const geoJsonOutputPath = path.resolve(__dirname, '../../data/geojson/routes.geojson')
 
+        console.log('🌍 [GeoTask] ▶️ Starting handleGeoParsing...')
+
         try {
             // Step 1: Download the ZIP file from remote source
             const response = await axios.get<Stream>(zipUrl, {
@@ -30,6 +32,8 @@ export class GeoTask {
                     rel: 'True',
                 },
             })
+            // Ensure the ZIP output directory exists
+            await fs.mkdir(path.dirname(zipPath), { recursive: true })
             const writer = createWriteStream(zipPath)
 
             response.data.pipe(writer)
@@ -50,9 +54,13 @@ export class GeoTask {
             // Step 4: Save the converted GeoJSON file
             await fs.writeFile(geoJsonOutputPath, JSON.stringify(geojson, null, 2), 'utf-8')
 
-            console.log(`[GeoTask] Parsed ${geojson} features and saved to ${geoJsonOutputPath}`)
+            const featureCount = Array.isArray((geojson as any)?.features) ? (geojson as any).features.length : 0
+            console.log(`✅ [GeoTask] Saved archive at: ${zipPath}`)
+            console.log(`✅ [GeoTask] Saved GeoJSON (${featureCount} features) to: ${geoJsonOutputPath}`)
+            console.log('🌍 [GeoTask] ✅ Finished handleGeoParsing')
         } catch (error) {
-            console.error('[GeoTask] Failed to process geo data:', error.message)
+            console.error('🌍 [GeoTask] Failed to process geo data:', (error as any)?.message || error)
+            console.log('🌍 [GeoTask] ✅ Finished handleGeoParsing')
         }
     }
 
