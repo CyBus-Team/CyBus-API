@@ -1,14 +1,14 @@
 import { Injectable } from '@nestjs/common'
-import { GetTripDto, TripPatternDTO } from './dto';
+import { GetTripDto, TripPatternDTO } from './dto'
 
 @Injectable()
 export class TripService {
-    private readonly otpBaseUrl = process.env.OTP_BASE_URL ?? 'http://localhost:8080';
+  private readonly otpBaseUrl = process.env.OTP_BASE_URL ?? 'http://127.0.0.1:8080'
 
-    async planTrip(dto: GetTripDto): Promise<TripPatternDTO[]> {
-        try {
-            const body = JSON.stringify({
-                query: `query trip($accessEgressPenalty: [PenaltyForStreetMode!], $alightSlackDefault: Int, $alightSlackList: [TransportModeSlack], $arriveBy: Boolean, $banned: InputBanned, $bicycleOptimisationMethod: BicycleOptimisationMethod, $bikeSpeed: Float, $boardSlackDefault: Int, $boardSlackList: [TransportModeSlack], $bookingTime: DateTime, $dateTime: DateTime, $filters: [TripFilterInput!], $from: Location!, $ignoreRealtimeUpdates: Boolean, $includePlannedCancellations: Boolean, $includeRealtimeCancellations: Boolean, $itineraryFilters: ItineraryFilters, $locale: Locale, $maxAccessEgressDurationForMode: [StreetModeDurationInput!], $maxDirectDurationForMode: [StreetModeDurationInput!], $maximumAdditionalTransfers: Int, $maximumTransfers: Int, $modes: Modes, $numTripPatterns: Int, $pageCursor: String, $relaxTransitGroupPriority: RelaxCostInput, $searchWindow: Int, $timetableView: Boolean, $to: Location!, $transferPenalty: Int, $transferSlack: Int, $triangleFactors: TriangleFactors, $useBikeRentalAvailabilityInformation: Boolean, $via: [TripViaLocationInput!], $waitReluctance: Float, $walkReluctance: Float, $walkSpeed: Float, $wheelchairAccessible: Boolean, $whiteListed: InputWhiteListed) {
+  async planTrip(dto: GetTripDto): Promise<TripPatternDTO[]> {
+    try {
+      const body = JSON.stringify({
+        query: `query trip($accessEgressPenalty: [PenaltyForStreetMode!], $alightSlackDefault: Int, $alightSlackList: [TransportModeSlack], $arriveBy: Boolean, $banned: InputBanned, $bicycleOptimisationMethod: BicycleOptimisationMethod, $bikeSpeed: Float, $boardSlackDefault: Int, $boardSlackList: [TransportModeSlack], $bookingTime: DateTime, $dateTime: DateTime, $filters: [TripFilterInput!], $from: Location!, $ignoreRealtimeUpdates: Boolean, $includePlannedCancellations: Boolean, $includeRealtimeCancellations: Boolean, $itineraryFilters: ItineraryFilters, $locale: Locale, $maxAccessEgressDurationForMode: [StreetModeDurationInput!], $maxDirectDurationForMode: [StreetModeDurationInput!], $maximumAdditionalTransfers: Int, $maximumTransfers: Int, $modes: Modes, $numTripPatterns: Int, $pageCursor: String, $relaxTransitGroupPriority: RelaxCostInput, $searchWindow: Int, $timetableView: Boolean, $to: Location!, $transferPenalty: Int, $transferSlack: Int, $triangleFactors: TriangleFactors, $useBikeRentalAvailabilityInformation: Boolean, $via: [TripViaLocationInput!], $waitReluctance: Float, $walkReluctance: Float, $walkSpeed: Float, $wheelchairAccessible: Boolean, $whiteListed: InputWhiteListed) {
         trip(
           accessEgressPenalty: $accessEgressPenalty
           alightSlackDefault: $alightSlackDefault
@@ -116,44 +116,44 @@ export class TripService {
           }
         }
       }`,
-                variables: {
-                    from: {
-                        coordinates: {
-                            latitude: dto.fromLatitude,
-                            longitude: dto.fromLongitude,
-                        }
-                    },
-                    to: {
-                        coordinates: {
-                            latitude: dto.toLatitude,
-                            longitude: dto.toLongitude,
-                        }
-                    },
-                    dateTime: dto.dateTime
-                },
-                operationName: 'trip'
-            });
-
-            console.log('[TripService] OTP request body:', body);
-            const response = await fetch(`${this.otpBaseUrl}/otp/transmodel/v3`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body,
-            });
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error(`❌ [TripService] OTP responded with HTTP ${response.status}: ${errorText}`);
-                return [];
+        variables: {
+          from: {
+            coordinates: {
+              latitude: dto.fromLatitude,
+              longitude: dto.fromLongitude,
             }
+          },
+          to: {
+            coordinates: {
+              latitude: dto.toLatitude,
+              longitude: dto.toLongitude,
+            }
+          },
+          dateTime: dto.dateTime
+        },
+        operationName: 'trip'
+      })
 
-            const json = await response.json();
-            return json?.data?.trip?.tripPatterns ?? [];
-        } catch (error) {
-            console.log('[TripService] Failed to fetch tripPatterns from OTP:', error);
-            return [];
-        }
+      console.log('[TripService] OTP request body:', body)
+      const response = await fetch(`${this.otpBaseUrl}/otp/transmodel/v3`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body,
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error(`❌ [TripService] OTP responded with HTTP ${response.status}: ${errorText}`)
+        return []
+      }
+
+      const json = await response.json()
+      return json?.data?.trip?.tripPatterns ?? []
+    } catch (error) {
+      console.log('[TripService] Failed to fetch tripPatterns from OTP:', error)
+      return []
     }
+  }
 }

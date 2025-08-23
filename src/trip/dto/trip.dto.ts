@@ -1,23 +1,23 @@
-import { Type } from 'class-transformer';
-import { IsNumber, IsISO8601, IsDefined } from 'class-validator';
+import { Type } from 'class-transformer'
+import { IsNumber, IsISO8601, IsDefined } from 'class-validator'
 
 export class GetTripDto {
     @Type(() => Number)
     @IsNumber()
-    fromLatitude: number;
+    fromLatitude: number
 
     @Type(() => Number)
     @IsNumber()
-    fromLongitude: number;
+    fromLongitude: number
 
     @Type(() => Number)
     @IsNumber()
-    toLatitude: number;
+    toLatitude: number
 
     @Type(() => Number)
     @IsNumber()
-    toLongitude: number;
+    toLongitude: number
 
     @IsISO8601()
-    dateTime: string;
+    dateTime: string
 }
