@@ -51,7 +51,9 @@ COPY --from=otpimage /app /opt/otpapp
 
 # If init.ts creates data for OTP — they are already in /app/data
 # They can be mounted into the OTP directory:
-RUN [ -d /app/data/otp ] && ln -s /app/data/otp /var/opentripplanner || true
+RUN if [ -d /app/data/otp ]; then \
+    for f in /app/data/otp/*; do [ -e "$f" ] && ln -s "$f" /var/opentripplanner/; done; \
+    fi
 
 # 3) Caddy config
 RUN mkdir -p /etc/caddy
@@ -93,7 +95,7 @@ RUN printf '\
     fi; \
     echo "▶️  Starting NestJS: $TARGET"; \
     exec node "$TARGET"'\''\n\
-    environment=PORT=%s\n\
+    environment=PORT=%s,OTP_BASE_URL=%%(ENV_OTP_BASE_URL)s\n\
     stdout_logfile=/dev/stdout\n\
     stdout_logfile_maxbytes=0\n\
     stderr_logfile=/dev/stderr\n\
@@ -103,17 +105,29 @@ RUN printf '\
     [program:otp]\n\
     directory=/var/opentripplanner\n\
     command=/bin/sh -lc '\''\
+    set -e; \
+    # Determine data base dir (root or nested otp/)\
+    BASE_DIR=/var/opentripplanner; \
+    if [ -d /var/opentripplanner/otp ]; then BASE_DIR=/var/opentripplanner/otp; fi; \
+    echo "⏳ Waiting for OTP data in $BASE_DIR (GTFS/OSM or prebuilt graph)..."; \
+    for i in $(seq 1 60); do \
+    if ls "$BASE_DIR"/*.zip >/dev/null 2>&1 || ls "$BASE_DIR"/*.pbf >/dev/null 2>&1 || [ -f "$BASE_DIR"/graph.obj ]; then \
+    echo "✅ OTP data detected in $BASE_DIR"; break; \
+    fi; \
+    echo "  No GTFS/OSM yet... retry $i/60"; sleep 2; \
+    done; \
     exec /usr/bin/java -Xmx2G \
     -cp /opt/otpapp/resources:/opt/otpapp/classes:/opt/otpapp/libs/* \
     org.opentripplanner.standalone.OTPMain \
-    /var/opentripplanner --build --save --serve'\''\n\
+    "$BASE_DIR" --build --save --serve'\''\n\
     environment=OTP_PORT=%s\n\
     stdout_logfile=/dev/stdout\n\
     stdout_logfile_maxbytes=0\n\
     stderr_logfile=/dev/stderr\n\
     stderr_logfile_maxbytes=0\n\
-    autostart=false\n\
-    autorestart=false\n\
+    autostart=true\n\
+    autorestart=true\n\
+    startsecs=20\n\
     \n\
     [program:caddy]\n\
     command=caddy run --config /etc/caddy/Caddyfile --adapter caddyfile\n\
