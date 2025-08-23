@@ -93,7 +93,7 @@ RUN printf '\
     fi; \
     echo "▶️  Starting NestJS: $TARGET"; \
     exec node "$TARGET"'\''\n\
-    environment=PORT=%s,OTP_BASE_URL=%(ENV_OTP_BASE_URL)s\n\
+    environment=PORT=%s,OTP_BASE_URL=%%(ENV_OTP_BASE_URL)s\n\
     stdout_logfile=/dev/stdout\n\
     stdout_logfile_maxbytes=0\n\
     stderr_logfile=/dev/stderr\n\
