@@ -29,7 +29,6 @@ async function main() {
             path.resolve(__dirname, '../data/gtfs/gtfs7.zip'),
         ]
         const gtfsOutputDir = path.resolve(__dirname, '../data/gtfs')
-        const stopsCsvPath = path.resolve(__dirname, '../data/stops/stops.csv')
         const shapeZipPath = path.resolve(__dirname, '../data/shp/routes.zip')
 
         // GTFS data (assumes all ZIPs must be present)
@@ -41,23 +40,6 @@ async function main() {
         await geoService.loadGtfsData(zipPaths, gtfsOutputDir)
         console.log('📦 [GeoService] ✅ Finished loadGtfsData')
         console.log('✅ GTFS done')
-
-        // Stops CSV to GeoJSON
-        if (fs.existsSync(stopsCsvPath)) {
-            console.log('🗂️ [GeoService] ▶️ Starting loadGeoDataFromCsv...')
-            await geoService.loadGeoDataFromCsv(stopsCsvPath)
-            console.log('🗂️ [GeoService] ✅ Finished loadGeoDataFromCsv')
-            console.log('✅ Stops done')
-        } else {
-            console.log('🌍 [GeoTask] ▶️ Starting downloadAndConvertStopsCsv...')
-            await geoTask.downloadAndConvertStopsCsv()
-            console.log('🌍 [GeoTask] ✅ Finished downloadAndConvertStopsCsv')
-
-            console.log('🗂️ [GeoService] ▶️ Starting loadGeoDataFromCsv...')
-            await geoService.loadGeoDataFromCsv(stopsCsvPath)
-            console.log('🗂️ [GeoService] ✅ Finished loadGeoDataFromCsv')
-            console.log('✅ Stops done')
-        }
 
         // Shapefile ZIP to GeoJSON
         if (fs.existsSync(shapeZipPath)) {
