@@ -93,7 +93,7 @@ RUN printf '\
     fi; \
     echo "▶️  Starting NestJS: $TARGET"; \
     exec node "$TARGET"'\''\n\
-    environment=PORT=%s\n\
+    environment=PORT=%s,OTP_BASE_URL=%(ENV_OTP_BASE_URL)s\n\
     stdout_logfile=/dev/stdout\n\
     stdout_logfile_maxbytes=0\n\
     stderr_logfile=/dev/stderr\n\
@@ -103,6 +103,14 @@ RUN printf '\
     [program:otp]\n\
     directory=/var/opentripplanner\n\
     command=/bin/sh -lc '\''\
+    set -e; \
+    echo "⏳ Waiting for OTP data in /var/opentripplanner (GTFS/OSM or prebuilt graph)..."; \
+    for i in $(seq 1 60); do \
+    if ls /var/opentripplanner/*.zip >/dev/null 2>&1 || ls /var/opentripplanner/*.pbf >/dev/null 2>&1 || [ -f /var/opentripplanner/graph.obj ]; then \
+    echo "✅ OTP data detected"; break; \
+    fi; \
+    echo "  No GTFS/OSM yet... retry $i/60"; sleep 2; \
+    done; \
     exec /usr/bin/java -Xmx2G \
     -cp /opt/otpapp/resources:/opt/otpapp/classes:/opt/otpapp/libs/* \
     org.opentripplanner.standalone.OTPMain \
@@ -112,8 +120,9 @@ RUN printf '\
     stdout_logfile_maxbytes=0\n\
     stderr_logfile=/dev/stderr\n\
     stderr_logfile_maxbytes=0\n\
-    autostart=false\n\
-    autorestart=false\n\
+    autostart=true\n\
+    autorestart=true\n\
+    startsecs=20\n\
     \n\
     [program:caddy]\n\
     command=caddy run --config /etc/caddy/Caddyfile --adapter caddyfile\n\
