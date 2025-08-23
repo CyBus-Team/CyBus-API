@@ -135,7 +135,7 @@ export class TripService {
       })
 
       console.log('[TripService] OTP request body:', body)
-      const response = await fetch(`${this.otpBaseUrl}/transmodel/v3`, {
+      const response = await fetch(`${this.otpBaseUrl}/otp/transmodel/v3`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
