@@ -77,6 +77,14 @@ export class RoutesService {
         const firstStop = stops[0]
         const lastStop = stops[stops.length - 1]
 
-        return new RouteResultDto(stops, firstStop, lastStop, shape)
+        // Step 4: Extract route name and number from properties
+        const routeName = matching[0].properties?.LINE_NAME_ || 'Unknown Route'
+        const routeNumber = matching[0].properties?.LINE_NAME || 'Unknown Number'
+
+        // Step 5: Extract arrival and departure times
+        const departureTime = matching[0].properties?.HOL_START_ || 'N/A'
+        const arrivalTime = matching[0].properties?.HOL_LAST_H || 'N/A'
+
+        return new RouteResultDto(stops, firstStop, lastStop, shape, routeName, routeNumber, arrivalTime, departureTime)
     }
 }
