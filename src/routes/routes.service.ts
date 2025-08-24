@@ -1,82 +1,98 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
-import { RouteResultDto, RoutesQueryDto, StopDto } from './dto'
-import { LatLonPoint } from './dto'
+import { RouteResultDto, RoutesQueryDto, StopDto, LatLonPoint } from './dto'
 import { join } from 'path'
 import { readFileSync } from 'fs'
-import { Feature, LineString, Point } from 'geojson'
 
 @Injectable()
 export class RoutesService {
 
     getRouteByTrip(dto: RoutesQueryDto): RouteResultDto {
-        const filePath = join(process.cwd(), 'data', 'geojson', 'routes.geojson')
-        const raw = readFileSync(filePath, 'utf-8')
-        const json = JSON.parse(raw)
-        const features = json.features || []
+        // We mirror the iOS logic:
+        // 1) pick a single GTFS trip by route_id
+        // 2) get stop_times only for that trip, sorted by stop_sequence
+        // 3) map to stops in the same order
+        // 4) build shape from GTFS shapes by trip.shape_id (sorted by shape_pt_sequence)
 
-        // Step 1: Find matching features by LINE_ID
-        const matching = features.filter(f =>
-            f.properties?.LINE_ID === dto.tripId
-        )
-        if (matching.length === 0) {
-            throw new NotFoundException(`No route found for LINE_ID: ${dto.tripId}`)
+        // Treat dto.tripId as routeId (to match the mobile function signature)
+        const routeId = dto.tripId
+
+        const gtfsDir = join(process.cwd(), 'data', 'gtfs')
+        const tripsPath = join(gtfsDir, 'trips.json')
+        const stopTimesPath = join(gtfsDir, 'stop_times.json')
+        const stopsPath = join(gtfsDir, 'stops.json')
+        const shapesPath = join(gtfsDir, 'shapes.json')
+
+        const trips = JSON.parse(readFileSync(tripsPath, 'utf-8'))
+        const stopTimes = JSON.parse(readFileSync(stopTimesPath, 'utf-8'))
+        const allStops = JSON.parse(readFileSync(stopsPath, 'utf-8'))
+        const allShapes = JSON.parse(readFileSync(shapesPath, 'utf-8'))
+        // Load routes.geojson for routeNumber lookup
+        const geojsonPath = join(process.cwd(), 'data', 'geojson', 'routes.geojson')
+        const routesGeojson = JSON.parse(readFileSync(geojsonPath, 'utf-8'))
+
+        // 1) Find one trip by route_id (similar to: trips.first { $0.routeId == routeID })
+        const trip = trips.find((t: any) => String(t.route_id) === String(routeId))
+        if (!trip) {
+            throw new NotFoundException(`No GTFS trip found for route_id: ${routeId}`)
         }
 
-        // Step 2: Extract shape (LineString) from route feature
-        let shape: LatLonPoint[] = []
-        for (const feature of matching) {
-            if (feature.geometry.type === 'LineString') {
-                shape = (feature.geometry as LineString).coordinates.map(
-                    ([lon, lat]): LatLonPoint => ({ lat, lon })
-                )
-            }
+        // 2) stop_times for that trip, sorted by stop_sequence
+        const stForTrip = stopTimes
+            .filter((st: any) => String(st.trip_id) === String(trip.trip_id))
+            .sort((a: any, b: any) => Number(a.stop_sequence) - Number(b.stop_sequence))
+
+        if (stForTrip.length === 0) {
+            throw new NotFoundException(`No stop_times for trip_id: ${trip.trip_id}`)
         }
 
-        // Step 3: Resolve stops using GTFS: stop_times.json and stops.json
-        const stopTimesPath = join(process.cwd(), 'data', 'gtfs', 'stop_times.json')
-        const stopsPath = join(process.cwd(), 'data', 'gtfs', 'stops.json')
-
-        const stopTimesRaw = readFileSync(stopTimesPath, 'utf-8')
-        const stopsRaw = readFileSync(stopsPath, 'utf-8')
-
-        const stopTimes = JSON.parse(stopTimesRaw)
-        const allStops = JSON.parse(stopsRaw)
-
-        const tripIds = new Set(
-            features
-                .map(f => f.properties?.LINE_ID)
-                .filter(Boolean)
-        )
-
-        console.log(`Found ${tripIds.size} trip IDs for LINE_ID: ${dto.tripId}`)
-
-        const stopIds = stopTimes
-            .filter((record: any) => tripIds.has(record.trip_id))
-            .map((record: any) => record.stop_id)
-
-        const seen = new Set<string>()
-        const uniqueStopIds = stopIds.filter(id => {
-            if (seen.has(id)) return false
-            seen.add(id)
-            return true
-        })
-
-        const stops: StopDto[] = uniqueStopIds
-            .map((id: string) => allStops.find((s: any) => s.stop_id === id))
+        // 3) Resolve stops in the same order
+        const stops: StopDto[] = stForTrip
+            .map((st: any) => allStops.find((s: any) => String(s.stop_id) === String(st.stop_id)))
             .filter(Boolean)
             .map((s: any) => ({
                 description: s.stop_name ?? '',
                 lat: parseFloat(s.stop_lat),
                 lon: parseFloat(s.stop_lon),
-            } satisfies StopDto))
+            } as StopDto))
 
         if (stops.length === 0) {
-            throw new NotFoundException(`No stops found for LINE_ID: ${dto.tripId}`)
+            throw new NotFoundException(`No stops resolved for trip_id: ${trip.trip_id}`)
         }
 
         const firstStop = stops[0]
         const lastStop = stops[stops.length - 1]
 
-        return new RouteResultDto(stops, firstStop, lastStop, shape)
+        // 4) Build shape from GTFS shapes by shape_id (sorted by shape_pt_sequence)
+        const shapePoints = allShapes
+            .filter((p: any) => String(p.shape_id) === String(trip.shape_id))
+            .sort((a: any, b: any) => Number(a.shape_pt_sequence) - Number(b.shape_pt_sequence))
+
+        const shape: LatLonPoint[] = shapePoints.map((p: any) => ({
+            lat: parseFloat(p.shape_pt_lat),
+            lon: parseFloat(p.shape_pt_lon),
+        }))
+
+        // Route meta (best effort): use GTFS fields if available
+        const routeName = (trip.trip_headsign ?? trip.trip_short_name ?? '').toString() || 'Unknown Route'
+        // Look up routeNumber from routes.geojson
+        let routeNumber = "N/A"
+        if (Array.isArray(routesGeojson.features)) {
+            const found = routesGeojson.features.find(
+                (f: any) => f?.properties?.LINE_ID == trip.route_id
+            )
+            if (found && found.properties && typeof found.properties.LINE_NAME !== "undefined") {
+                routeNumber = found.properties.LINE_NAME
+            }
+        }
+
+        // Times are not per-day specific here; if you need exact departure/arrival for a specific service date,
+        // you should derive from stop_times (first/last arrival/departure). As a placeholder, we expose first/last times.
+        const rawDeparture = (stForTrip[0]?.departure_time ?? stForTrip[0]?.arrival_time ?? 'N/A').toString()
+        const rawArrival = (stForTrip[stForTrip.length - 1]?.arrival_time ?? stForTrip[stForTrip.length - 1]?.departure_time ?? 'N/A').toString()
+
+        const departureTime = rawDeparture.split(':').slice(0, 2).join(':')
+        const arrivalTime = rawArrival.split(':').slice(0, 2).join(':')
+
+        return new RouteResultDto(stops, firstStop, lastStop, shape, routeName, routeNumber, arrivalTime, departureTime)
     }
 }
