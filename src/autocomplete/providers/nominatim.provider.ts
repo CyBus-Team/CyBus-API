@@ -31,7 +31,10 @@ export class NominatimProvider implements AutocompleteProvider {
                 },
             })
 
-            return response.data.map((item: any): AutocompleteResultDto => ({
+            console.log(response.data)
+
+            return response.data.map((item): AutocompleteResultDto => ({
+                id: item.place_id,
                 name: item.display_name,
                 address: [
                     item.address?.road,

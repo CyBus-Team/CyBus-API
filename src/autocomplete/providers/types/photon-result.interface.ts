@@ -4,6 +4,7 @@ export interface PhotonResult {
             coordinates: [number, number]
         }
         properties: {
+            osm_id: number
             name: string
             street?: string
             city?: string

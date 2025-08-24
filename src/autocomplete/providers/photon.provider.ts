@@ -23,6 +23,7 @@ export class PhotonProvider implements AutocompleteProvider {
             })
 
             return response.data.features.map((f) => ({
+                id: f.properties.osm_id,
                 name: f.properties.name,
                 address: [
                     f.properties.city,
