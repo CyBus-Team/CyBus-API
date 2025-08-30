@@ -14,7 +14,6 @@ export class FeedbackDto {
     @Type(() => Number)
     rating: number
 
-    @IsEmail()
     @IsOptional()
     email?: string
 }
