@@ -18,6 +18,4 @@ export class GetTripDto {
     @IsNumber()
     toLongitude: number
 
-    @IsISO8601()
-    dateTime: string
 }
