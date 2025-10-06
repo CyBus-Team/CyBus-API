@@ -7,6 +7,7 @@ import { GeoModule } from './geo/geo.module'
 import { BusesModule } from './buses/buses.module'
 import { RoutesModule } from './routes/routes.module'
 import { TripModule } from './trip/trip.module'
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -19,7 +20,8 @@ import { TripModule } from './trip/trip.module'
     GeoModule,
     BusesModule,
     RoutesModule,
-    TripModule
+    TripModule,
+    NotificationsModule
   ],
 })
 export class AppModule { }

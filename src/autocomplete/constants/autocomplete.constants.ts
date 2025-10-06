@@ -12,3 +12,6 @@ export const DEFAULT_AUTOCOMPLETE_COUNTRY = 'cy'
 
 // Default bounding box coordinates for Cyprus used in Photon provider
 export const DEFAULT_PHOTON_BBOX = '32.0,34.5,34.1,35.7'
+
+// Key used for injecting autocomplete providers
+export const AUTOCOMPLETE_PROVIDERS_KEY = 'AUTOCOMPLETE_PROVIDERS_KEY'
