@@ -20,7 +20,6 @@ export class MonitoringService {
                 const check = await service.check()
                 const message = `Health check for ${check.toString()}`
                 console.log(message)
-                await this.notifications.send(message)
             } catch (err) {
                 const message = `Health check for ${service.name} failed: ${err} ❌ `
                 console.error(message)
