@@ -3,6 +3,10 @@ import { IsIn, IsInt, IsNotEmpty, IsOptional, IsString, Min, IsNumber } from "cl
 
 export class AutocompleteQueryDto {
 
+  constructor(partial?: Partial<AutocompleteQueryDto>) {
+    Object.assign(this, partial)
+  }
+
   // The search query text (e.g., "Lidl")
   @IsNotEmpty()
   @IsString()
@@ -32,4 +36,5 @@ export class AutocompleteQueryDto {
   @Type(() => Number)
   @IsNumber()
   longitude?: number
+
 }

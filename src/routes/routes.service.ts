@@ -85,7 +85,7 @@ export class RoutesService {
             }
         }
 
-        // Times are not per-day specific here; if you need exact departure/arrival for a specific service date,
+        // Times are not per-day specific here if you need exact departure/arrival for a specific service date,
         // you should derive from stop_times (first/last arrival/departure). As a placeholder, we expose first/last times.
         const rawDeparture = (stForTrip[0]?.departure_time ?? stForTrip[0]?.arrival_time ?? 'N/A').toString()
         const rawArrival = (stForTrip[stForTrip.length - 1]?.arrival_time ?? stForTrip[stForTrip.length - 1]?.departure_time ?? 'N/A').toString()

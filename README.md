@@ -30,6 +30,8 @@ POSTGRES_TEST_DB='cybus_test'
 
 # Connection URL
 DATABASE_URL='postgresql://postgres:123@localhost:5434/cybus?schema=public'
+# Notification settings
+TELEGRAM_BOT_TOKEN='TELEGRAM_BOT_TOKEN'
 ```
 
 ### Example `.env.test`

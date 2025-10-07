@@ -81,13 +81,12 @@ export class TripService {
   }
 }`
 
-    let pageCursor: string | null = null;
-    const maxPages = 5;
-    const MAX_RESULTS = 5;
-    const all: TripPatternDTO[] = [];
+    let pageCursor: string | null = null
+    const maxPages = 5
+    const MAX_RESULTS = 5
+    const all: TripPatternDTO[] = []
 
     for (let page = 1; page <= maxPages; page++) {
-      console.log(`[TripService] Fetching page ${page} with cursor: ${pageCursor}`);
       const body = JSON.stringify({
         query,
         variables: {
@@ -97,59 +96,52 @@ export class TripService {
           numTripPatterns: MAX_RESULTS,
         },
         operationName: 'trip',
-      });
+      })
 
       try {
         const response = await fetch(`${this.otpBaseUrl}/otp/transmodel/v3`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body,
-        });
+        })
 
         if (!response.ok) {
-          const errorText = await response.text();
-          console.error(`❌ [TripService] OTP responded with HTTP ${response.status}: ${errorText}`);
-          break;
+          const errorText = await response.text()
+          break
         }
 
-        const json = await response.json();
-        const tripData = json?.data?.trip;
+        const json = await response.json()
+        const tripData = json?.data?.trip
         if (!tripData) {
-          console.log('[TripService] No trip data returned, stopping.');
-          break;
+          break
         }
 
-        const pagePatterns: TripPatternDTO[] = tripData.tripPatterns ?? [];
+        const pagePatterns: TripPatternDTO[] = tripData.tripPatterns ?? []
         // Backend normalization: force line.presentation to be an empty string for iOS decoder compatibility
         pagePatterns.forEach(pattern => {
-          if (!pattern?.legs) return;
+          if (!pattern?.legs) return
           pattern.legs.forEach(leg => {
             if (leg && (leg as any).line) {
-              (leg as any).line.presentation = "";
+              (leg as any).line.presentation = ""
             }
-          });
-        });
+          })
+        })
         if (pagePatterns.length) {
-          console.log(`[TripService] Retrieved ${pagePatterns.length} tripPatterns on this page.`);
-          all.push(...pagePatterns);
+          all.push(...pagePatterns)
           if (all.length >= MAX_RESULTS) {
-            console.log(`[TripService] Reached MAX_RESULTS (${MAX_RESULTS}). Returning early.`);
-            return all.slice(0, MAX_RESULTS);
+            return all.slice(0, MAX_RESULTS)
           }
         }
 
-        pageCursor = tripData.nextPageCursor;
+        pageCursor = tripData.nextPageCursor
         if (!pageCursor) {
-          console.log('[TripService] No nextPageCursor, reached last page.');
-          break;
+          break
         }
       } catch (error) {
-        console.log('[TripService] Failed to fetch tripPatterns from OTP:', error);
-        break;
+        break
       }
     }
 
-    console.log(`[TripService] Accumulated ${all.length} tripPatterns over all pages.`);
-    return all.slice(0, MAX_RESULTS);
+    return all.slice(0, MAX_RESULTS)
   }
 }

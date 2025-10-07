@@ -1,18 +1,20 @@
 import { Injectable, Inject } from '@nestjs/common'
 import { AutocompleteQueryDto } from './dto'
 import { AutocompleteProvider } from './providers/autocomplete-provider.interface'
+import { AUTOCOMPLETE_PROVIDERS_KEY } from './constants/autocomplete.constants'
 
 @Injectable()
 export class AutocompleteService {
     constructor(
         // Injects all registered autocomplete providers implementing the AutocompleteProvider interface
-        @Inject('AUTOCOMPLETE_PROVIDERS')
+        @Inject(AUTOCOMPLETE_PROVIDERS_KEY)
         private readonly providers: AutocompleteProvider[],
     ) { }
 
     async search(dto: AutocompleteQueryDto) {
         // Iterate over each autocomplete provider sequentially
         for (const provider of this.providers) {
+            console.log(`Trying provider: ${provider.constructor.name}`)
             try {
                 // Attempt to retrieve search results from the provider
                 const result = await provider.search(dto)

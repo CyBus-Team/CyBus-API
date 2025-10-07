@@ -7,4 +7,8 @@ export class RoutesQueryDto {
     @IsString()
     tripId: string
 
+    constructor(partial?: Partial<RoutesQueryDto>) {
+        Object.assign(this, partial)
+    }
+
 }
