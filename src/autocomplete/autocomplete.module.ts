@@ -23,6 +23,7 @@ import { AUTOCOMPLETE_PROVIDERS_KEY } from './constants/autocomplete.constants'
       inject: [NominatimProvider, PhotonProvider],
     },
     AutocompleteService,
-  ]
+  ],
+  exports: [AutocompleteService],
 })
 export class AutocompleteModule { }

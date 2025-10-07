@@ -7,5 +7,6 @@ import { BusesController } from './buses.controller'
   imports: [ScheduleModule.forRoot()],
   controllers: [BusesController],
   providers: [BusesService],
+  exports: [BusesService],
 })
 export class BusesModule { }

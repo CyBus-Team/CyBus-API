@@ -18,4 +18,8 @@ export class GetTripDto {
     @IsNumber()
     toLongitude: number
 
+    constructor(partial?: Partial<GetTripDto>) {
+        Object.assign(this, partial)
+    }
+
 }

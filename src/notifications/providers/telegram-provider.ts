@@ -1,9 +1,7 @@
-import { Injectable } from "@nestjs/common"
+import { Injectable, OnModuleInit, OnModuleDestroy } from "@nestjs/common"
 import { NotificationsProvider } from "./notifications-provider.interface"
-import { NotificationDto } from "../dto"
-import TelegramBot from 'node-telegram-bot-api'
+import TelegramBot = require('node-telegram-bot-api')
 import { PrismaService } from "src/prisma/prisma.service"
-import e from "express"
 
 @Injectable()
 export class TelegramProvider implements NotificationsProvider {
@@ -13,37 +11,38 @@ export class TelegramProvider implements NotificationsProvider {
     private bot!: TelegramBot
 
     async setup(): Promise<void> {
+        if (this.bot) return // idempotent
         const token = process.env.TELEGRAM_BOT_TOKEN!
         this.bot = new TelegramBot(token, { polling: true })
-        this.bot.on('message', (msg) => {
+
+        this.bot.on('message', async (msg) => {
             if (msg.text === '/start') {
-                this.prisma.telegramChat.create({
-                    data: {
-                        chatId: msg.chat.id.toString()
-                    }
-                })
-                this.bot.sendMessage(msg.chat.id, 'Subscribed to notifications ✅');
+                await this.prisma.telegramChat.create({
+                    data: { chatId: msg.chat.id.toString() }
+                }).catch(() => { }) // ignore duplicates if unique
+                await this.bot.sendMessage(msg.chat.id, 'Subscribed to notifications ✅')
             } else if (msg.text === '/stop') {
-                this.prisma.telegramChat.delete({
-                    where: {
-                        chatId: msg.chat.id.toString()
-                    }
-                })
-                this.bot.sendMessage(msg.chat.id, 'Unsubscribed from notifications ❌');
+                await this.prisma.telegramChat.delete({
+                    where: { chatId: msg.chat.id.toString() }
+                }).catch(() => { }) // ignore if not found
+                await this.bot.sendMessage(msg.chat.id, 'Unsubscribed from notifications ❌')
             } else {
-                this.bot.sendMessage(msg.chat.id, 'Unknown command. Use /start to subscribe and /stop to unsubscribe.');
+                await this.bot.sendMessage(msg.chat.id, 'Unknown command. Use /start to subscribe and /stop to unsubscribe.')
             }
         })
     }
 
     async teardown(): Promise<void> {
-        await this.bot.stopPolling()
-        await this.bot.close()
+        if (!this.bot) return
+        await this.bot.stopPolling().catch(() => { })
+        await this.bot.close().catch(() => { })
+        this.bot = undefined as any
     }
 
-    async send(dto: NotificationDto): Promise<void> {
+    async send(message: string): Promise<void> {
+        if (!this.bot) await this.setup()
         for (const chat of await this.prisma.telegramChat.findMany()) {
-            await this.bot.sendMessage(chat.chatId, dto.message)
+            await this.bot?.sendMessage(chat.chatId, message)
         }
     }
 
