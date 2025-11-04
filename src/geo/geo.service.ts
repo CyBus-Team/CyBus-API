@@ -45,7 +45,14 @@ export class GeoService {
         const records = parse(content, {
             columns: true,
             skip_empty_lines: true,
-            delimiter: '', // Fix: Explicitly specify semicolon delimiter
+            delimiter: ';',
+            bom: true,
+            relax_column_count: true,
+            trim: true,
+            on_record: (rec: any) => {
+                for (const k in rec) if (rec[k] === '') rec[k] = null
+                return rec
+            },
         }) as StopCsvRow[]
 
         const features = records.flatMap((row) => {
@@ -112,10 +119,26 @@ export class GeoService {
 
                 console.log(`    📄 [GeoService] Reading file from zip: ${fileEntry.path}`)
                 const content = await fileEntry.buffer()
-                const records = parse(content.toString('utf-8').replace(/^\uFEFF/, ''), {
-                    columns: true,
-                    skip_empty_lines: true,
-                })
+                let records: any[] = []
+                try {
+                    records = parse(content.toString('utf-8'), {
+                        columns: true,
+                        skip_empty_lines: true,
+                        bom: true,
+                        delimiter: ',',
+                        relax_column_count: true,
+                        relax_quotes: true,
+                        skip_records_with_error: true,
+                        trim: true,
+                        on_record: (rec: any) => {
+                            for (const k in rec) if (rec[k] === '') rec[k] = null
+                            return rec
+                        },
+                    })
+                } catch (err) {
+                    console.error(`    ❌ [GeoService] Failed to parse CSV ${fileEntry.path}:`, err)
+                    continue
+                }
 
                 const baseName = path.basename(fileEntry.path, '.txt')
                 if (!allRecordsMap.has(baseName)) {
