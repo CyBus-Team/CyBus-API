@@ -5,6 +5,57 @@ import { parse } from 'csv-parse/sync'
 import * as path from 'path'
 import * as unzipper from 'unzipper'
 
+/**
+ * Ensures every CSV data row has exactly the same number of fields as the header.
+ * Returns a sanitized CSV string and a list of skipped 1-based line numbers (including header as line 1).
+ * Uses only csv-parse (already installed) and manual string assembly (no extra deps).
+ */
+function sanitizeCsvByHeader(raw: string, delimiter = ','): { csv: string; skipped: number[] } {
+    // Parse as arrays (no column names) to count fields precisely
+    const rows = parse(raw, {
+        columns: false,
+        skip_empty_lines: true,
+        bom: true,
+        delimiter,
+        relax_quotes: true,
+        trim: false,
+    }) as string[][]
+
+    if (!rows.length) return { csv: raw, skipped: [] }
+
+    const header = rows[0]
+    const expected = header.length
+    const kept: string[][] = [header]
+    const skipped: number[] = []
+
+    for (let i = 1; i < rows.length; i++) {
+        const r = rows[i]
+        if (Array.isArray(r) && r.length === expected) {
+            kept.push(r)
+        } else {
+            // +1 because rows are 0-based here but CSV line numbers are 1-based
+            skipped.push(i + 1)
+        }
+    }
+
+    // Rebuild a valid CSV manually to preserve commas and quotes correctly.
+    const csv = kept
+        .map(row =>
+            row
+                .map(field => {
+                    const val = field == null ? '' : String(field)
+                    if (val.includes(delimiter) || val.includes('"') || /\s/.test(val)) {
+                        return '"' + val.replace(/"/g, '""') + '"'
+                    }
+                    return val
+                })
+                .join(delimiter),
+        )
+        .join('\n')
+
+    return { csv, skipped }
+}
+
 interface StopCsvRow {
     STOP_ID: string
     NAME: string
@@ -119,16 +170,37 @@ export class GeoService {
 
                 console.log(`    📄 [GeoService] Reading file from zip: ${fileEntry.path}`)
                 const content = await fileEntry.buffer()
+                const raw = content.toString('utf-8')
+                const baseName = path.basename(fileEntry.path, '.txt')
+
+                // Some GTFS feeds (e.g., fare_attributes.txt) may contain malformed rows with fewer fields than the header.
+                // For OTP / OneBusAway, this causes "expected and actual number of csv fields differ".
+                // We sanitize only when needed to avoid changing valid files.
+                let rawToParse = raw
+                let skippedLines: number[] = []
+
+                if (baseName === 'fare_attributes') {
+                    const sanitized = sanitizeCsvByHeader(raw, ',')
+                    rawToParse = sanitized.csv
+                    skippedLines = sanitized.skipped
+                    if (skippedLines.length) {
+                        console.warn(
+                            `    ⚠️ [GeoService] fare_attributes.txt: skipped ${skippedLines.length} malformed line(s): ${skippedLines.join(', ')}`,
+                        )
+                    }
+                }
+
                 let records: any[] = []
                 try {
-                    records = parse(content.toString('utf-8'), {
+                    records = parse(rawToParse, {
                         columns: true,
                         skip_empty_lines: true,
                         bom: true,
                         delimiter: ',',
-                        relax_column_count: true,
+                        // Be strict for fare_attributes after sanitation; keep legacy relaxed behavior for others
+                        relax_column_count: baseName !== 'fare_attributes',
                         relax_quotes: true,
-                        skip_records_with_error: true,
+                        skip_records_with_error: baseName !== 'fare_attributes',
                         trim: true,
                         on_record: (rec: any) => {
                             for (const k in rec) if (rec[k] === '') rec[k] = null
@@ -140,7 +212,6 @@ export class GeoService {
                     continue
                 }
 
-                const baseName = path.basename(fileEntry.path, '.txt')
                 if (!allRecordsMap.has(baseName)) {
                     allRecordsMap.set(baseName, [])
                 }
