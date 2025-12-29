@@ -77,25 +77,7 @@ nodaemon=true
 user=root
 
 [program:nest]
-command=/bin/sh -lc '\
-# Compose DATABASE_URL at runtime if not provided; prefer full URL when present\
-: "${POSTGRES_PORT:=5432}"; \
-if [ -z "${DATABASE_URL}" ] && [ -n "${POSTGRES_HOST}" ] && [ -n "${POSTGRES_USER}" ] && [ -n "${POSTGRES_PASSWORD}" ] && [ -n "${POSTGRES_DB}" ]; then \
-  export DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}?schema=public"; \
-fi; \
-echo "📦 Prisma will use DATABASE_URL=${DATABASE_URL:-<not-set>}"; \
-(npx prisma migrate deploy --schema=prisma/schema.prisma || npx prisma db push --schema=prisma/schema.prisma); \
-\
-# Detect compiled Nest entrypoint robustly\
-TARGET=""; \
-for f in dist/main.js dist/src/main.js dist/apps/*/main.js; do \
-  if [ -f "$f" ]; then TARGET="$f"; break; fi; \
-done; \
-if [ -z "$TARGET" ]; then \
-  echo "❌ No compiled entrypoint found under ./dist"; ls -R dist || true; exit 1; \
-fi; \
-echo "▶️  Starting NestJS: $TARGET"; \
-exec node "$TARGET"'
+command=/bin/sh -lc ': "${POSTGRES_PORT:=5432}"; if [ -z "${DATABASE_URL}" ] && [ -n "${POSTGRES_HOST}" ] && [ -n "${POSTGRES_USER}" ] && [ -n "${POSTGRES_PASSWORD}" ] && [ -n "${POSTGRES_DB}" ]; then export DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}?schema=public"; fi; echo "📦 Prisma will use DATABASE_URL=${DATABASE_URL:-<not-set>}"; (npx prisma migrate deploy --schema=prisma/schema.prisma || npx prisma db push --schema=prisma/schema.prisma); TARGET=""; for f in dist/main.js dist/src/main.js dist/apps/*/main.js; do if [ -f "$f" ]; then TARGET="$f"; break; fi; done; if [ -z "$TARGET" ]; then echo "❌ No compiled entrypoint found under ./dist"; ls -R dist || true; exit 1; fi; echo "▶️  Starting NestJS: $TARGET"; exec node "$TARGET"'
 environment=PORT=%(ENV_NEST_PORT)s,OTP_BASE_URL=%(ENV_OTP_BASE_URL)s
 stdout_logfile=/dev/stdout
 stdout_logfile_maxbytes=0
@@ -110,22 +92,7 @@ killasgroup=true
 
 [program:otp]
 directory=/var/opentripplanner
-command=/bin/sh -lc '\
-set -e; \
-# Determine data base dir (root or nested otp/)\
-BASE_DIR=/var/opentripplanner; \
-if [ -d /var/opentripplanner/otp ]; then BASE_DIR=/var/opentripplanner/otp; fi; \
-echo "⏳ Waiting for OTP data in $BASE_DIR (GTFS/OSM or prebuilt graph)..."; \
-for i in $(seq 1 60); do \
-  if ls "$BASE_DIR"/*.zip >/dev/null 2>&1 || ls "$BASE_DIR"/*.pbf >/dev/null 2>&1 || [ -f "$BASE_DIR"/graph.obj ]; then \
-    echo "✅ OTP data detected in $BASE_DIR"; break; \
-  fi; \
-  echo "  No GTFS/OSM yet... retry $i/60"; sleep 2; \
-done; \
-exec /usr/bin/java -Xmx2G \
-  -cp /opt/otpapp/resources:/opt/otpapp/classes:/opt/otpapp/libs/* \
-  org.opentripplanner.standalone.OTPMain \
-  "$BASE_DIR" --build --save --serve'
+command=/bin/sh -lc 'set -e; BASE_DIR=/var/opentripplanner; if [ -d /var/opentripplanner/otp ]; then BASE_DIR=/var/opentripplanner/otp; fi; echo "⏳ Waiting for OTP data in $BASE_DIR (GTFS/OSM or prebuilt graph)..."; for i in $(seq 1 60); do if ls "$BASE_DIR"/*.zip >/dev/null 2>&1 || ls "$BASE_DIR"/*.pbf >/dev/null 2>&1 || [ -f "$BASE_DIR"/graph.obj ]; then echo "✅ OTP data detected in $BASE_DIR"; break; fi; echo "  No GTFS/OSM yet... retry $i/60"; sleep 2; done; exec /usr/bin/java -Xmx2G -cp /opt/otpapp/resources:/opt/otpapp/classes:/opt/otpapp/libs/* org.opentripplanner.standalone.OTPMain "$BASE_DIR" --build --save --serve'
 environment=OTP_PORT=%(ENV_OTP_PORT)s
 stdout_logfile=/dev/stdout
 stdout_logfile_maxbytes=0
